@@ -140,3 +140,56 @@ use of the same dev database; a real CI pipeline (PROJECT_SPEC.md §17)
 should instead provision an ephemeral Postgres service container per
 run, which sidesteps this entirely and is worth doing before this
 project ships CI.
+
+## 2026-09-14 — `disableOfflineQueue: true` is required for fail-open to actually work
+
+**Context:** While manually verifying Redis-failure behavior against
+the real Docker container (stopping it while the API was running),
+`GET /api/products/:id` hung indefinitely instead of returning the
+expected fail-open `BYPASS` response, and a subsequent `/api/health`
+request hung too.
+**Decision:** `cache-kit`'s `createRedisClient()` now passes
+`disableOfflineQueue: true` to `node-redis`.
+**Reason:** node-redis's default behavior is to _queue_ commands issued
+while the client is disconnected and wait for reconnection, rather than
+rejecting them immediately. Every fail-open `try/catch` in
+`cache.ts`/`rate-limit.ts`/`pubsub.ts` depends on the underlying Redis
+call actually rejecting on failure — with the default queueing
+behavior, nothing ever rejected, so nothing ever caught, and the
+request just hung until Redis came back. This was only caught by
+actually stopping the real container per PROJECT_SPEC.md §21's
+instruction to test this for real rather than mocking it — the
+automated fail-open tests (which point at an unreachable address that
+never connects at all, so no client is ever in a "connected then
+dropped" state) did not exercise this exact scenario.
+**Trade-off:** None — this is strictly a correctness fix. Retested
+after the fix: `docker compose stop redis` while the API was running →
+`GET /api/products/:id` returned 200 with `x-cache-status: BYPASS`,
+`POST /api/products` returned 201, `/api/health` reported
+`{"status":"degraded","redis":"down"}`, and `GET /api/cache/stats`
+degraded gracefully instead of erroring — all within milliseconds, no
+hang. `docker compose start redis` afterward, and cache-aside resumed
+(`MISS` then `HIT`) on the next two reads.
+
+## 2026-09-14 — Sequential test file execution (`fileParallelism: false`)
+
+**Context:** `apps/api`'s test files all share one real Postgres and
+one real Redis instance, including a single global pub/sub channel
+(`cacheforge:events`). Running the full suite showed
+`test/product-events.integration.test.ts` intermittently receiving
+events published by `test/product-cache.integration.test.ts`'s
+concurrent product writes, since Vitest runs test files in parallel by
+default.
+**Decision:** Set `fileParallelism: false` in `apps/api/vitest.config.ts`.
+**Reason:** Full determinism matters more than test-suite speed for a
+suite whose entire point is exercising shared external state truthfully
+(real Postgres, real Redis, one real pub/sub channel) rather than
+mocking it apart. Filtering pub/sub messages by a per-test identifier
+would have papered over the same underlying issue without fixing the
+rate-limiter and cache tests' _own_ latent exposure to the same kind of
+cross-file leakage (e.g., two files' rate-limit counters colliding if
+they ever reused an identifier).
+**Trade-off:** The suite runs somewhat slower (test files no longer
+overlap in wall-clock time). Acceptable for a project of this size; a
+future CI setup provisioning fresh, ephemeral Postgres/Redis containers
+per run would remove the need for this entirely.

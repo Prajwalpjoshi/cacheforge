@@ -9,12 +9,17 @@ rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
 ## Status
 
-**Phase 2 — database + product CRUD.** The monorepo/tooling foundation,
-a Fastify API with a real PostgreSQL-backed Product CRUD API, and a
-Next.js landing page exist. `/api/health` genuinely checks Postgres and
-Redis connectivity. Redis caching itself (cache-aside, TTL,
-invalidation, rate limiting, pub/sub), the Performance Lab, and the rest
-of the dashboard are not built yet.
+**Phase 3 — Redis cache, invalidation, and rate limiting.** The
+monorepo/tooling foundation, a Fastify API with a real PostgreSQL-backed
+Product CRUD API, and a Next.js landing page exist. Product reads are
+now genuinely cache-aside (Redis, real TTLs, tag-based list
+invalidation); product writes invalidate the cache and publish real
+pub/sub events; every `/api/*` route except `/api/health` is
+Redis-backed rate limited; `/api/cache/*` gives real cache
+observability/administration. Redis failure is fail-open and was
+verified against the actual Docker container, not mocked — see
+`docs/caching.md`. The Performance Lab, Cache Explorer/API Explorer
+frontends, and the rest of the dashboard are not built yet.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single
