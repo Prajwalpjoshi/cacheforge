@@ -21,3 +21,17 @@ export class ConflictError extends AppError {
     this.name = "ConflictError";
   }
 }
+
+export class BadRequestError extends AppError {
+  constructor(message = "Bad request") {
+    super(400, message);
+    this.name = "BadRequestError";
+  }
+}
+
+export class TooManyRequestsError extends AppError {
+  constructor(message = "Too many requests") {
+    super(429, message);
+    this.name = "TooManyRequestsError";
+  }
+}

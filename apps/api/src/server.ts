@@ -5,19 +5,27 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
-import { loadEnv } from "./env.js";
+import { loadEnv, type Env } from "./env.js";
 import { createLoggerOptions } from "./observability/logger.js";
 import { requestContextPlugin } from "./observability/request-context.plugin.js";
 import { corsPlugin } from "./plugins/cors.plugin.js";
 import { helmetPlugin } from "./plugins/helmet.plugin.js";
 import { prismaPlugin } from "./plugins/prisma.plugin.js";
 import { redisPlugin } from "./plugins/redis.plugin.js";
+import { rateLimitPlugin } from "./plugins/rate-limit.plugin.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRoutes } from "./routes/health.route.js";
 import { productRoutes } from "./routes/product.route.js";
 
-export async function buildServer(): Promise<FastifyInstance> {
-  const env = loadEnv();
+/**
+ * `envOverrides` exists for tests that need a different rate-limit
+ * threshold than production without weakening the production default
+ * (PROJECT_SPEC.md §23) — see test/rate-limit.integration.test.ts.
+ */
+export async function buildServer(
+  envOverrides?: Partial<Env>,
+): Promise<FastifyInstance> {
+  const env: Env = { ...loadEnv(), ...envOverrides };
 
   const app = Fastify({
     logger: createLoggerOptions(env),
@@ -35,6 +43,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await app.register(helmetPlugin);
   await app.register(prismaPlugin);
   await app.register(redisPlugin);
+  await app.register(rateLimitPlugin);
 
   await app.register(healthRoutes, { prefix: "/api" });
   await app.register(productRoutes, { prefix: "/api" });
