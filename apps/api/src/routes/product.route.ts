@@ -20,7 +20,11 @@ import {
 
 export async function productRoutes(fastify: FastifyInstance): Promise<void> {
   const repository = createProductRepository(fastify.prisma);
-  const service = createProductService(repository);
+  const service = createProductService({
+    repository,
+    cache: fastify.cache,
+    pubsub: fastify.pubsub,
+  });
   fastify.decorate("productService", service);
 
   const app = fastify.withTypeProvider<ZodTypeProvider>();

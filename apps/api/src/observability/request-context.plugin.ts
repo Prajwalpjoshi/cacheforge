@@ -1,11 +1,13 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
+import { CacheStatus, DataSource } from "../generated/prisma/client.js";
 
 /**
  * Foundation-level request observability: stamps the response with the
  * request ID and logs a structured line per request (method, route,
- * status, duration). Persisting this as a `RequestMetric` row is Phase 2
- * work — see PROJECT_SPEC.md §14 and §20.
+ * status, duration, cache status/source). This is the shape a future
+ * `RequestMetric` persistence hook would write from — PROJECT_SPEC.md
+ * §14/§20; that persistence itself is a later phase (Performance Lab).
  */
 export const requestContextPlugin = fp(async (fastify: FastifyInstance) => {
   fastify.addHook("onRequest", async (request) => {
@@ -29,6 +31,8 @@ export const requestContextPlugin = fp(async (fastify: FastifyInstance) => {
         route: request.routeOptions?.url ?? request.url,
         statusCode: reply.statusCode,
         durationMs: durationMs !== undefined ? Math.round(durationMs) : null,
+        cacheStatus: request.cacheStatus ?? CacheStatus.NOT_APPLICABLE,
+        source: request.cacheSource ?? DataSource.DB,
       },
       "request completed",
     );

@@ -1,6 +1,6 @@
 import type { HealthResponse } from "../schemas/health.schema.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type { RedisClient } from "../types/redis-client.js";
+import type { RedisClientLike } from "@cacheforge/cache-kit";
 
 export interface HealthCheckResult {
   statusCode: 200 | 503;
@@ -16,7 +16,7 @@ async function checkPostgres(prisma: PrismaClient): Promise<"up" | "down"> {
   }
 }
 
-async function checkRedis(redis: RedisClient): Promise<"up" | "down"> {
+async function checkRedis(redis: RedisClientLike): Promise<"up" | "down"> {
   try {
     if (!redis.isOpen) {
       return "down";
@@ -30,7 +30,7 @@ async function checkRedis(redis: RedisClient): Promise<"up" | "down"> {
 
 export interface HealthServiceDeps {
   prisma: PrismaClient;
-  redis: RedisClient;
+  redis: RedisClientLike;
 }
 
 export function createHealthService(deps: HealthServiceDeps) {

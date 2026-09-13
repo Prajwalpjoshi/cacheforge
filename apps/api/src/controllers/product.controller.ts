@@ -5,21 +5,36 @@ import type {
   ProductListQuery,
   UpdateProductRequest,
 } from "@cacheforge/contracts";
+import { DataSource, CacheStatus } from "../generated/prisma/client.js";
 
 export async function listProductsController(
   request: FastifyRequest<{ Querystring: ProductListQuery }>,
   reply: FastifyReply,
 ): Promise<void> {
-  const result = await request.server.productService.list(request.query);
-  reply.send(result);
+  const { response, cacheStatus } = await request.server.productService.list(
+    request.query,
+  );
+
+  request.cacheStatus = cacheStatus;
+  request.cacheSource =
+    cacheStatus === CacheStatus.HIT ? DataSource.CACHE : DataSource.DB;
+  reply.header("x-cache-status", cacheStatus);
+  reply.send(response);
 }
 
 export async function getProductController(
   request: FastifyRequest<{ Params: ProductIdParams }>,
   reply: FastifyReply,
 ): Promise<void> {
-  const result = await request.server.productService.getById(request.params.id);
-  reply.send(result);
+  const { product, cacheStatus } = await request.server.productService.getById(
+    request.params.id,
+  );
+
+  request.cacheStatus = cacheStatus;
+  request.cacheSource =
+    cacheStatus === CacheStatus.HIT ? DataSource.CACHE : DataSource.DB;
+  reply.header("x-cache-status", cacheStatus);
+  reply.send(product);
 }
 
 export async function createProductController(
