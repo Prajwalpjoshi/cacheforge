@@ -9,10 +9,12 @@ rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
 ## Status
 
-**Phase 1 — foundation.** The monorepo, tooling, a Fastify API skeleton
-(`GET /api/health`), and a Next.js landing page exist. The product
-catalog, Redis caching, the Performance Lab, and the rest of the
-dashboard are not built yet.
+**Phase 2 — database + product CRUD.** The monorepo/tooling foundation,
+a Fastify API with a real PostgreSQL-backed Product CRUD API, and a
+Next.js landing page exist. `/api/health` genuinely checks Postgres and
+Redis connectivity. Redis caching itself (cache-aside, TTL,
+invalidation, rate limiting, pub/sub), the Performance Lab, and the rest
+of the dashboard are not built yet.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single
@@ -21,7 +23,8 @@ source of truth for this project.
 ## Stack
 
 Next.js · TypeScript · Tailwind CSS · Fastify · Zod · Pino · PostgreSQL ·
-Prisma · Redis · Vitest · Docker Compose · pnpm workspaces.
+Prisma (driver adapters, `@prisma/adapter-pg`) · Redis · Vitest · Docker
+Compose · pnpm workspaces.
 
 ## Prerequisites
 
@@ -33,17 +36,28 @@ Prisma · Redis · Vitest · Docker Compose · pnpm workspaces.
 ## Getting started
 
 ```bash
-cp .env.example .env
-pnpm install
-docker compose up -d          # starts local Postgres + Redis
-pnpm --filter @cacheforge/api dev   # http://localhost:4000/api/health
-pnpm --filter @cacheforge/web dev   # http://localhost:3000
+cp .env.example .env                      # docker compose (Postgres credentials)
+cp apps/api/.env.example apps/api/.env    # the API's own config (see below)
+
+pnpm install                              # also generates the Prisma client
+docker compose up -d                      # starts local Postgres + Redis
+
+pnpm --filter @cacheforge/api db:migrate  # applies prisma/migrations
+pnpm --filter @cacheforge/api db:seed     # optional: a small demo catalog
+
+pnpm --filter @cacheforge/api dev        # http://localhost:4000/api/health
+pnpm --filter @cacheforge/web dev        # http://localhost:3000
 ```
+
+Each app reads its own env file rather than a shared root `.env`, because
+Node's `process.loadEnvFile()` resolves relative to the process's working
+directory — which is `apps/api` when pnpm runs that workspace's scripts,
+not the repo root. See `docs/decisions.md`.
 
 ## Monorepo layout
 
 ```
-apps/api          Fastify API
+apps/api          Fastify API (Prisma/PostgreSQL, Product CRUD)
 apps/web           Next.js dashboard
 packages/cache-kit Framework-agnostic Redis caching toolkit
 packages/contracts Shared Zod schemas/types (API ⇄ web)
@@ -52,11 +66,14 @@ docs/              Architecture, caching, performance, decisions
 
 ## Common scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Run `apps/api` and `apps/web` in parallel |
-| `pnpm lint` | Lint every workspace |
-| `pnpm typecheck` | Type-check every workspace |
-| `pnpm test` | Run tests in every workspace |
-| `pnpm build` | Build every workspace |
-| `pnpm format` | Format the repo with Prettier |
+| Command                                    | Description                               |
+| ------------------------------------------ | ----------------------------------------- |
+| `pnpm dev`                                 | Run `apps/api` and `apps/web` in parallel |
+| `pnpm lint`                                | Lint every workspace                      |
+| `pnpm typecheck`                           | Type-check every workspace                |
+| `pnpm test`                                | Run tests in every workspace              |
+| `pnpm build`                               | Build every workspace                     |
+| `pnpm format`                              | Format the repo with Prettier             |
+| `pnpm --filter @cacheforge/api db:migrate` | Apply Prisma migrations                   |
+| `pnpm --filter @cacheforge/api db:seed`    | Seed a small demo product catalog         |
+| `pnpm --filter @cacheforge/api db:studio`  | Open Prisma Studio against the local DB   |

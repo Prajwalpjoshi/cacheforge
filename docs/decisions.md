@@ -3,7 +3,7 @@
 ADR-style log of decisions actually made during the build, in the format
 Context / Decision / Reason / Trade-off. See `PROJECT_SPEC.md` §25 for
 the architectural risk/trade-off table decided up front, before any code
-existed. This file captures decisions made *while implementing*.
+existed. This file captures decisions made _while implementing_.
 
 ## 2026-09-13 — pnpm via global npm install, not Corepack shims
 
@@ -59,3 +59,84 @@ not by Next's cache.
 **Trade-off:** Forgoes some of Next 16's prerendering/performance
 benefits on largely-static pages (Landing, Architecture, Docs); an
 acceptable cost given those pages are a small fraction of the app.
+
+## 2026-09-13 — Prisma pinned to stable 7.10.0, not the `latest` tag
+
+**Context:** At Phase 2 time, npm's `latest` dist-tag for the `prisma`
+CLI package pointed to `8.0.0-rc.14` (a release candidate), while
+`@prisma/client`'s `latest` tag was still stable `7.10.0` — installing
+both as `@latest` would have produced a mismatched, pre-release
+combination.
+**Decision:** Installed `prisma` and `@prisma/client` pinned to the
+exact matching stable version, `7.10.0`.
+**Reason:** A portfolio project's data layer should not run on a release
+candidate; `prisma generate` itself even prints an upgrade notice
+pointing at the RC, which was deliberately ignored.
+**Trade-off:** None — this is the correct, boring choice.
+
+## 2026-09-13 — Prisma driver adapters are mandatory in this version
+
+**Context:** This Prisma version's `prisma-client` generator (the
+default from `prisma init`, generating a self-contained client into
+`src/generated/prisma` rather than `node_modules/@prisma/client`)
+requires an explicit driver adapter — `new PrismaClient()` with no
+adapter does not compile; the generated types state a driver adapter
+is "required unless you connect through Prisma Accelerate."
+**Decision:** Added `@prisma/adapter-pg` (+ `pg`) and construct the
+client as `new PrismaClient({ adapter: new PrismaPg({ connectionString })
+})` in `apps/api/src/plugins/prisma.plugin.ts`. The schema's
+`datasource` block no longer carries a `url = env(...)` line — the
+connection string lives in `apps/api/prisma7.config.ts` for the CLI and
+is passed explicitly to the adapter for the application.
+**Reason:** This is simply how the installed Prisma version works; the
+generated `src/generated/prisma/internal/prismaNamespace.ts` states the
+requirement directly, discovered by reading the generated output rather
+than assuming the API in the assistant's training data still applied.
+**Trade-off:** One more explicit dependency (`@prisma/adapter-pg`,
+`pg`) versus the older implicit-connection model; no functional
+downside.
+
+## 2026-09-13 — Per-app `.env` files instead of a single root `.env`
+
+**Context:** Phase 1's `loadEnv()` calls `process.loadEnvFile()` with no
+path, which resolves relative to `process.cwd()`. Because
+`pnpm --filter @cacheforge/api <script>` runs with cwd set to
+`apps/api`, Phase 1 was silently never loading the root `.env` it
+instructed users to create — this went unnoticed because every var in
+that phase had a Zod schema default. Phase 2's `DATABASE_URL` has no
+default, which would have surfaced this as a confusing startup crash.
+**Decision:** `apps/api` now reads its own `apps/api/.env`
+(`apps/api/.env.example` is the template); the repo-root `.env` is
+trimmed to just the `POSTGRES_*` vars `docker compose` needs (it
+auto-loads `.env` from the directory containing `docker-compose.yml`).
+This also matches how `apps/api/prisma7.config.ts` resolves
+`DATABASE_URL` (via `dotenv/config`, also cwd-relative) and how
+production deployment already works (§18 — Vercel and Render configure
+each service's env vars independently; there is no shared root `.env`
+in production either).
+**Reason:** Removes a footgun rather than hard-coding a relative path
+from `src/env.ts` up to the repo root, which would have been fragile
+and wouldn't have matched how the Prisma CLI resolves its own env file.
+**Trade-off:** `DATABASE_URL`/`REDIS_URL` are now duplicated in
+concept between the root `.env.example` (docker compose's Postgres
+credentials) and `apps/api/.env.example` (the API's connection
+strings) — an intentional, documented duplication, not an oversight.
+
+## 2026-09-13 — Shared dev/test database, cleanup-based test isolation
+
+**Context:** Product integration tests need a real PostgreSQL instance
+(explicitly required for this phase) but a dedicated ephemeral test
+database wasn't set up.
+**Decision:** Tests run against the same local Postgres container/
+database used for manual development, using per-run unique SKU
+prefixes (`test-<runId>-N`) and an `afterAll` cleanup that deletes only
+rows matching that prefix.
+**Reason:** Avoids provisioning a second database for a single local
+container within this phase's scope, while still exercising real
+Prisma/PostgreSQL behavior (unique constraint violations, not-found
+errors) rather than mocks.
+**Trade-off:** Test runs are not fully isolated from concurrent manual
+use of the same dev database; a real CI pipeline (PROJECT_SPEC.md §17)
+should instead provision an ephemeral Postgres service container per
+run, which sidesteps this entirely and is worth doing before this
+project ships CI.
