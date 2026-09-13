@@ -3,3 +3,8 @@ dist
 coverage
 .next
 pnpm-lock.yaml
+apps/api/src/generated
+apps/api/prisma/migrations
+
+# Authoritative spec document — never auto-reformatted.
+PROJECT_SPEC.md

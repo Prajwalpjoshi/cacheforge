@@ -29,10 +29,10 @@ export default function Home() {
           Observe. Cache. Measure. Optimize.
         </p>
         <p className="max-w-2xl text-base leading-7 text-muted">
-          A production-style API performance and Redis caching platform,
-          built to make the cost of not caching visible — and the mechanics
-          of caching correctly explorable, with real measurements against a
-          real PostgreSQL database and a real Redis instance.
+          A production-style API performance and Redis caching platform, built
+          to make the cost of not caching visible — and the mechanics of caching
+          correctly explorable, with real measurements against a real PostgreSQL
+          database and a real Redis instance.
         </p>
       </section>
 
@@ -56,8 +56,8 @@ export default function Home() {
       <section className="rounded-lg border border-border bg-surface p-6 text-sm text-muted">
         <p>
           This is the foundation build. The dashboard, Performance Lab, Cache
-          Explorer, API Explorer, System Health, Architecture, and
-          Documentation pages are not implemented yet — see{" "}
+          Explorer, API Explorer, System Health, Architecture, and Documentation
+          pages are not implemented yet — see{" "}
           <code className="font-mono text-xs">PROJECT_SPEC.md</code> for the
           full plan and current phase status.
         </p>

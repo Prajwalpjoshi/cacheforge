@@ -9,6 +9,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/coverage/**",
       "apps/web/**",
+      "apps/api/src/generated/**",
     ],
   },
   js.configs.recommended,
