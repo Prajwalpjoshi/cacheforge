@@ -1,0 +1,76 @@
+// PROJECT_SPEC.md §8 is the source of truth for this schema.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  description String?
+  category    String
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
+
+model RequestMetric {
+  id          BigInt      @id @default(autoincrement())
+  requestId   String
+  method      String
+  route       String
+  statusCode  Int
+  durationMs  Float
+  cacheStatus CacheStatus @default(NOT_APPLICABLE)
+  source      DataSource  @default(DB)
+  createdAt   DateTime    @default(now())
+
+  @@index([route, createdAt])
+  @@index([createdAt])
+}
+
+enum CacheStatus {
+  HIT
+  MISS
+  BYPASS
+  NOT_APPLICABLE
+}
+
+enum DataSource {
+  DB
+  CACHE
+}
+
+model BenchmarkRun {
+  id             String        @id @default(cuid())
+  label          String?
+  targetRoute    String
+  mode           BenchmarkMode
+  iterations     Int
+  concurrency    Int           @default(1)
+  minMs          Float
+  maxMs          Float
+  avgMs          Float
+  p50Ms          Float
+  p95Ms          Float
+  p99Ms          Float
+  throughputRps  Float
+  cacheHitRate   Float?
+  rawLatenciesMs Json
+  createdAt      DateTime      @default(now())
+}
+
+enum BenchmarkMode {
+  DB_ONLY
+  CACHE_ONLY
+  COMPARISON
+}

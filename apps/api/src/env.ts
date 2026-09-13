@@ -6,10 +6,10 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
-  // Optional in Phase 1: Prisma/Postgres integration lands in a later phase.
-  DATABASE_URL: z.string().optional(),
-  // Optional in Phase 1: Redis integration lands in a later phase.
-  REDIS_URL: z.string().optional(),
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  // Defaulted rather than required: Phase 2 only pings Redis for health
+  // reporting, so a missing/unreachable Redis must degrade, not crash startup.
+  REDIS_URL: z.string().default("redis://localhost:6379"),
 });
 
 export type Env = z.infer<typeof envSchema>;
