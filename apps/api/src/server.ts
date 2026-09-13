@@ -16,6 +16,7 @@ import { rateLimitPlugin } from "./plugins/rate-limit.plugin.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRoutes } from "./routes/health.route.js";
 import { productRoutes } from "./routes/product.route.js";
+import { cacheAdminRoutes } from "./routes/cache-admin.route.js";
 
 /**
  * `envOverrides` exists for tests that need a different rate-limit
@@ -47,6 +48,7 @@ export async function buildServer(
 
   await app.register(healthRoutes, { prefix: "/api" });
   await app.register(productRoutes, { prefix: "/api" });
+  await app.register(cacheAdminRoutes, { prefix: "/api" });
 
   return app;
 }
