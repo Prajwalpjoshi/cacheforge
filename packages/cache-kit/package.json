@@ -1,0 +1,34 @@
+{
+  "name": "@cacheforge/cache-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-agnostic Redis caching toolkit (cache-aside, rate limiting, pub/sub) built for CacheForge and designed to be reusable independently of it.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:integration": "echo \"no integration tests for cache-kit yet\"",
+    "clean": "rimraf dist coverage .tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.4",
+    "eslint": "^10.10.0",
+    "rimraf": "^6.1.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}
