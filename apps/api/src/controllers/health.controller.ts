@@ -1,9 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { getHealth } from "../services/health.service.js";
 
-export function healthController(
-  _request: FastifyRequest,
+export async function healthController(
+  request: FastifyRequest,
   reply: FastifyReply,
-): void {
-  reply.send(getHealth());
+): Promise<void> {
+  const { statusCode, body } = await request.server.healthService.getHealth();
+  reply.status(statusCode).send(body);
 }

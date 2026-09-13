@@ -14,7 +14,7 @@ describe("GET /api/health", () => {
     await app.close();
   });
 
-  it("returns 200 with an ok status and a request-id header", async () => {
+  it("returns 200 with postgres/redis up and a request-id header", async () => {
     const response = await app.inject({ method: "GET", url: "/api/health" });
 
     expect(response.statusCode).toBe(200);
@@ -22,6 +22,8 @@ describe("GET /api/health", () => {
 
     const body = response.json();
     expect(body.status).toBe("ok");
+    expect(body.postgres).toBe("up");
+    expect(body.redis).toBe("up");
     expect(typeof body.uptimeSec).toBe("number");
     expect(body.uptimeSec).toBeGreaterThanOrEqual(0);
   });
