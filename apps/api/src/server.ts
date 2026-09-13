@@ -10,8 +10,11 @@ import { createLoggerOptions } from "./observability/logger.js";
 import { requestContextPlugin } from "./observability/request-context.plugin.js";
 import { corsPlugin } from "./plugins/cors.plugin.js";
 import { helmetPlugin } from "./plugins/helmet.plugin.js";
+import { prismaPlugin } from "./plugins/prisma.plugin.js";
+import { redisPlugin } from "./plugins/redis.plugin.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRoutes } from "./routes/health.route.js";
+import { productRoutes } from "./routes/product.route.js";
 
 export async function buildServer(): Promise<FastifyInstance> {
   const env = loadEnv();
@@ -30,8 +33,11 @@ export async function buildServer(): Promise<FastifyInstance> {
   await app.register(requestContextPlugin);
   await app.register(corsPlugin);
   await app.register(helmetPlugin);
+  await app.register(prismaPlugin);
+  await app.register(redisPlugin);
 
   await app.register(healthRoutes, { prefix: "/api" });
+  await app.register(productRoutes, { prefix: "/api" });
 
   return app;
 }
