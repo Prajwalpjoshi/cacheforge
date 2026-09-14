@@ -9,17 +9,22 @@ rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
 ## Status
 
-**Phase 3 — Redis cache, invalidation, and rate limiting.** The
+**Phase 4 — observability + Performance Lab backend.** The
 monorepo/tooling foundation, a Fastify API with a real PostgreSQL-backed
-Product CRUD API, and a Next.js landing page exist. Product reads are
-now genuinely cache-aside (Redis, real TTLs, tag-based list
-invalidation); product writes invalidate the cache and publish real
-pub/sub events; every `/api/*` route except `/api/health` is
-Redis-backed rate limited; `/api/cache/*` gives real cache
-observability/administration. Redis failure is fail-open and was
-verified against the actual Docker container, not mocked — see
-`docs/caching.md`. The Performance Lab, Cache Explorer/API Explorer
-frontends, and the rest of the dashboard are not built yet.
+Product CRUD API, Redis cache-aside/rate-limiting/pub-sub, and a
+Next.js landing page exist. Every real product-catalog request is now
+persisted as a `RequestMetric` row and summarized by
+`GET /api/metrics/summary` / `GET /api/metrics/requests` — real
+aggregates computed in PostgreSQL, never fabricated. The Performance
+Lab backend (`POST /api/benchmarks/run`, `GET /api/benchmarks[/:id]`)
+runs real, in-process DB-vs-cache benchmarks — real
+`process.hrtime.bigint()` measurements, real percentiles, real
+throughput, real cache hit rates, persisted as `BenchmarkRun` rows —
+that a future frontend will visualize; see `docs/performance.md` for
+the methodology and one real measured run. Redis/Postgres failure
+remains fail-open/degraded exactly as in Phase 3, re-verified against
+the actual Docker containers. The frontend (dashboard, Performance Lab
+UI, Cache Explorer, API Explorer) is not built yet.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single

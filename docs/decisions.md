@@ -193,3 +193,137 @@ they ever reused an identifier).
 overlap in wall-clock time). Acceptable for a project of this size; a
 future CI setup provisioning fresh, ephemeral Postgres/Redis containers
 per run would remove the need for this entirely.
+
+## 2026-09-14 — `metricsService` decorated on the root instance, not its own route file
+
+**Context:** `productService`/`cacheAdminService`/`healthService` are
+each decorated inside their own route-registration function
+(`product.route.ts`, etc.) — fine, since only that route's own
+controllers ever read the decoration, and Fastify decorations are only
+visible within the encapsulation context they're declared in (and its
+children), not to sibling contexts. `metricsService` breaks that
+pattern: the global `onResponse` hook in
+`observability/request-context.plugin.ts` — registered before, and
+outside of, any route file's own context — needs to call
+`fastify.metricsService.record(...)` for every request.
+**Decision:** Added `apps/api/src/plugins/metrics.plugin.ts`, wrapped
+in `fastify-plugin` (`fp`), whose only job is to construct the metrics
+repository/service and decorate them onto the _root_ instance;
+`metrics.route.ts` now just wires two `GET` routes to the
+already-decorated `fastify.metricsService` rather than constructing its
+own copy.
+**Reason:** `fp()` is specifically what makes a `decorate()` call apply
+to the root instance instead of a new child scope — without it, the
+cross-cutting hook would silently see `fastify.metricsService` as
+`undefined` at every request (this was caught before it shipped, by
+reasoning through Fastify's encapsulation model while wiring the hook,
+not by a failing test).
+**Trade-off:** One more plugin file for a single decoration; justified
+because it's the only service with this genuine cross-context need. A
+related, smaller version of the same issue came up wiring the benchmark
+engine (needs the _same_ cache-aside code `productService` provides),
+solved differently there: `benchmark.route.ts` constructs its own
+second `ProductService` instance from the same root-level
+`repository`/`cache`/`pubsub` primitives, rather than promoting
+`productService` to root-level too — it's a pure/stateless factory, so
+a second instance behaves identically to the first, and this avoided
+touching product.route.ts's already-working Phase 2/3 code.
+
+## 2026-09-14 — `COMPARISON` benchmarks persist as one row, not two
+
+**Context:** `BenchmarkRun` has one set of stat columns
+(`minMs`/`maxMs`/.../`throughputRps`/`cacheHitRate`) per PROJECT_SPEC.md
+§8, but `COMPARISON` mode produces _two_ full result sets (DB_ONLY and
+CACHE_ONLY). PROJECT_SPEC.md §10 describes the API response as one
+`BenchmarkRun` "for `COMPARISON`, the response includes both
+sub-results" — singular, not two separate history entries.
+**Decision:** A `COMPARISON` run creates exactly one `BenchmarkRun` row.
+Its top-level stat columns mirror the cache-only ("headline") side; the
+`rawLatenciesMs` JSON column holds a structured
+`{ dbOnly: { latenciesMs, throughputRps }, cacheOnly: { latenciesMs,
+throughputRps, hits, total } }` instead of a flat array. On read,
+`GET /:id` recomputes each side's min/max/avg/percentiles from its own
+stored raw latencies (deterministic, no drift risk) and derives the
+improvement percentages from those two real result sets; throughput
+and hit-count are stored directly since they can't be derived from a
+latency array alone.
+**Reason:** Matches the spec's own framing exactly, avoids adding a new
+column/model to correlate two rows as "one comparison," and keeps
+`GET /api/benchmarks`'s history list honest (a `DB_ONLY` row there
+really is one run, not half of something else).
+**Trade-off:** `rawLatenciesMs`'s shape now depends on `mode` (flat
+array vs. structured object) — documented in code
+(`services/benchmark.service.ts`) and in `docs/performance.md`, not
+left implicit.
+
+## 2026-09-14 — Redis client gets a bounded `connectTimeout`
+
+**Context:** Writing a test for "benchmarks return 503 when Redis is
+unreachable," pointing `buildServer()` at an address nothing listens on
+took 10+ seconds to resolve — node-redis's default reconnect strategy
+keeps retrying with backoff in the background even after the first
+attempt fails, and with no `connectTimeout` set, each attempt could take
+a long time to fail on its own.
+**Decision:** `redis.plugin.ts` now passes `connectTimeout: 5000` when
+constructing the production client (the reconnect _strategy_ itself —
+keep retrying — is left at its default; only each individual attempt's
+duration is bounded).
+**Reason:** This is a genuine production robustness gap independent of
+the test that surfaced it: a Redis that's slow or unreachable at
+startup should make the API degrade (per the fail-open design) within a
+bounded, known time, not hang indefinitely on an OS-level TCP timeout.
+The test itself was rewritten to exercise the same
+`ServiceUnavailableError` precondition against a `cache-kit` client
+built directly with `reconnectStrategy: false` (the same fast,
+deterministic pattern Phase 3's own cache-kit tests already used),
+rather than waiting out a real 5-second timeout through the full
+HTTP/Fastify layer.
+**Trade-off:** None functionally; a real, hard-down Redis at process
+startup now surfaces as "degraded" within 5 seconds instead of
+whatever the OS's default TCP timeout happens to be on a given machine.
+
+## 2026-09-14 — Which routes are excluded from RequestMetric persistence
+
+**Context:** PROJECT_SPEC.md doesn't enumerate which routes should
+count as "traffic" for `/api/metrics/summary`/`requests`; left
+unaddressed, viewing the metrics dashboard would itself generate new
+metrics rows about viewing the dashboard, and a Performance Lab
+benchmark's own outer HTTP request (dominated by however many
+iterations it ran) would appear as one wildly-outlying "request" that
+skews the real traffic's percentiles.
+**Decision:** `/api/health`, `/api/metrics/*`, `/api/benchmarks/*`, and
+`/api/cache/*` are excluded from persistence (still logged, just not
+written to `RequestMetric`); everything else — currently
+`/api/products*` — is persisted. Centralized in one function,
+`apps/api/src/observability/metrics-exclusions.ts`, with the reasoning
+for each prefix in its doc comment, so this is documented in exactly
+one place rather than duplicated wherever it's relevant.
+**Reason:** Keeps the metrics table representing what it's meant to
+represent (real product-catalog traffic) without ambiguity about which
+"requests" count.
+**Trade-off:** If a future phase wants to report on cache-admin or
+benchmark request volume specifically, it needs its own mechanism —
+deliberately not conflated with the product-traffic metrics pipeline.
+
+## 2026-09-14 — Metrics persistence is fire-and-forget, not queued or awaited
+
+**Context:** PROJECT_SPEC.md's Phase 4 instructions require persistence
+to avoid adding request latency, avoid an unbounded in-memory queue,
+and never silently lose errors.
+**Decision:** The `RequestMetric` insert happens in Fastify's
+`onResponse` hook (which runs _after_ the response has already been
+sent to the client) and is not `await`-ed — it's fired with a
+`.catch()` that logs a warning on failure.
+**Reason:** Because the response is already sent by the time this hook
+runs, the insert's latency is invisible to the caller regardless of
+whether it's awaited; not awaiting it just means Fastify's hook chain
+for _this_ request doesn't wait on it either. There's no queue/array
+accumulating pending writes — each request's insert is one independent,
+bounded operation, so the natural back-pressure is Postgres/Prisma's
+own connection pool, identical to any other concurrent query the API
+makes.
+**Trade-off:** If the process crashes in the narrow window between
+"response sent" and "insert completed," that one metric row is lost.
+Acceptable for a demo observability pipeline reporting on aggregate
+trends, not acceptable for audit-grade/billing data — documented as a
+known, deliberate limitation rather than left implicit.
