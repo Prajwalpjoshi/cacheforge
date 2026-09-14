@@ -10,6 +10,8 @@ import type {
 import type { ProductService } from "../services/product.service.js";
 import type { HealthService } from "../services/health.service.js";
 import type { CacheAdminService } from "../services/cache-admin.service.js";
+import type { MetricsService } from "../services/metrics.service.js";
+import type { BenchmarkService } from "../services/benchmark.service.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -23,6 +25,8 @@ declare module "fastify" {
     productService: ProductService;
     healthService: HealthService;
     cacheAdminService: CacheAdminService;
+    metricsService: MetricsService;
+    benchmarkService: BenchmarkService;
   }
 
   interface FastifyRequest {

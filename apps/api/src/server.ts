@@ -12,11 +12,14 @@ import { corsPlugin } from "./plugins/cors.plugin.js";
 import { helmetPlugin } from "./plugins/helmet.plugin.js";
 import { prismaPlugin } from "./plugins/prisma.plugin.js";
 import { redisPlugin } from "./plugins/redis.plugin.js";
+import { metricsPlugin } from "./plugins/metrics.plugin.js";
 import { rateLimitPlugin } from "./plugins/rate-limit.plugin.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRoutes } from "./routes/health.route.js";
 import { productRoutes } from "./routes/product.route.js";
 import { cacheAdminRoutes } from "./routes/cache-admin.route.js";
+import { metricsRoutes } from "./routes/metrics.route.js";
+import { benchmarkRoutes } from "./routes/benchmark.route.js";
 
 /**
  * `envOverrides` exists for tests that need a different rate-limit
@@ -44,11 +47,14 @@ export async function buildServer(
   await app.register(helmetPlugin);
   await app.register(prismaPlugin);
   await app.register(redisPlugin);
+  await app.register(metricsPlugin);
   await app.register(rateLimitPlugin);
 
   await app.register(healthRoutes, { prefix: "/api" });
   await app.register(productRoutes, { prefix: "/api" });
   await app.register(cacheAdminRoutes, { prefix: "/api" });
+  await app.register(metricsRoutes, { prefix: "/api" });
+  await app.register(benchmarkRoutes, { prefix: "/api" });
 
   return app;
 }
