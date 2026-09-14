@@ -24,7 +24,14 @@ import {
  * throwing back at the caller.
  */
 export const redisPlugin = fp(async (fastify: FastifyInstance) => {
-  const client = createRedisClient(fastify.config.REDIS_URL);
+  // Bounds each individual connection attempt (initial connect and
+  // every later reconnect try) so a completely unreachable Redis fails
+  // fast rather than hanging on the OS-level TCP timeout — the
+  // reconnect strategy itself is left at its default (keep retrying
+  // with backoff), this only caps how long any single attempt waits.
+  const client = createRedisClient(fastify.config.REDIS_URL, {
+    connectTimeout: 5000,
+  });
 
   client.on("error", (error) => {
     fastify.log.warn({ err: error }, "redis client error");
