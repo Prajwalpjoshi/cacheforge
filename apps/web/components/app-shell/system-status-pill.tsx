@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getHealth } from "@/lib/api/health";
-import { queryKeys } from "@/lib/query-keys";
+import type { getHealth } from "@/lib/api/health";
+import { useHealth } from "@/lib/hooks/use-health";
 import { describeOverallHealth, type OverallHealth } from "@/lib/status";
 import { StatusBadge } from "@/components/ui/status-badge";
 
@@ -16,11 +15,7 @@ function overallHealth(
 
 /** Compact, always-visible system status in the sidebar/topbar — polled independently of the Health page so the shell always reflects live reality. */
 export function SystemStatusPill() {
-  const { data, isError } = useQuery({
-    queryKey: queryKeys.health(),
-    queryFn: ({ signal }) => getHealth(signal),
-    refetchInterval: 10_000,
-  });
+  const { data, isError } = useHealth();
 
   return (
     <StatusBadge

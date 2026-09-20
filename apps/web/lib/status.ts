@@ -63,6 +63,14 @@ export function describeOverallHealth(status: OverallHealth): StatusDescriptor {
   }
 }
 
+/** CSS custom properties (see app/globals.css's `@theme inline` block) for contexts that need a real color value rather than a class name — e.g. Recharts `fill`/`stroke` props. */
+export const TONE_CSS_VAR: Record<StatusTone, string> = {
+  success: "var(--color-status-hit)",
+  warning: "var(--color-status-miss)",
+  danger: "var(--color-status-down)",
+  neutral: "var(--color-status-neutral)",
+};
+
 export function describeHttpStatus(statusCode: number): StatusDescriptor {
   if (statusCode < 300) {
     return { label: String(statusCode), tone: "success", icon: CheckCircle2 };
