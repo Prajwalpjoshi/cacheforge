@@ -9,22 +9,16 @@ rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
 ## Status
 
-**Phase 5 — production frontend.** The full stack now exists end to
-end: a Fastify API (PostgreSQL-backed Product CRUD, Redis cache-aside/
-rate-limiting/pub-sub, a real observability pipeline, and an in-process
-Performance Lab benchmark engine) and a Next.js frontend that actually
-visualizes and operates it. The frontend consumes every real endpoint —
-`/api/health`, `/api/products*`, `/api/metrics/*`, `/api/cache/*`,
-`/api/benchmarks/*` — through a typed client layer validated against
-the shared `@cacheforge/contracts` schemas: an Overview Dashboard (live
-metrics, per-route/per-request charts, recent-requests table), a
-Performance Lab (run/inspect real DB-vs-cache benchmarks), a Cache
-Explorer (browse/delete real Redis keys), an API Explorer (send real
-requests to every documented endpoint), a System Health page, and an
-Architecture/Documentation pair that render the project's own real
-diagrams and markdown. No page substitutes fabricated numbers for a
-loading/empty/error state. See `docs/decisions.md` for what changed
-and why during this phase.
+**Phase 6 — deployment readiness verification.** The full stack
+(Fastify API + Next.js frontend, real PostgreSQL/Redis, observability,
+and the Performance Lab) built in Phases 1–5 has been audited for
+production readiness: real production builds, a real `node
+dist/server.js` + `next start` run, environment-variable inventory, a
+secret scan, and Redis/PostgreSQL failure injection against the
+production-mode servers. **No deployment has been performed** — see
+[`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md) for the full
+checklist and verdict, and `docs/decisions.md` for what changed and
+why during this phase.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single
@@ -64,6 +58,142 @@ Node's `process.loadEnvFile()` resolves relative to the process's working
 directory — which is `apps/api` when pnpm runs that workspace's scripts,
 not the repo root. See `docs/decisions.md`.
 
+## Environment variables
+
+Every variable the application actually reads (`apps/api/src/env.ts`,
+`apps/web/lib/api/client.ts`); nothing here is aspirational.
+
+| Variable                    | Used by | Required                              | Public? | Notes                                                                                                 |
+| --------------------------- | ------- | ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                  | API     | No (default `development`)            | No      | `production` disables `pino-pretty` and dev-only log formatting                                       |
+| `PORT`                      | API     | No (default `4000`)                   | No      | The API binds `0.0.0.0:$PORT`                                                                         |
+| `CORS_ORIGIN`               | API     | No (default `http://localhost:3000`)  | No      | **Must** be set to the real frontend origin in any non-local deployment                               |
+| `DATABASE_URL`              | API     | **Yes**, no default                   | No      | PostgreSQL connection string (`postgresql://user:pass@host:5432/db`); supports `?sslmode=require`     |
+| `REDIS_URL`                 | API     | No (default `redis://localhost:6379`) | No      | Supports `rediss://` (TLS) and embedded auth — no code change needed for a managed provider           |
+| `RATE_LIMIT_WINDOW_SECONDS` | API     | No (default `60`)                     | No      | Fixed-window length for both limiters                                                                 |
+| `RATE_LIMIT_MAX`            | API     | No (default `300`)                    | No      | Read-route limit per window per IP                                                                    |
+| `RATE_LIMIT_WRITE_MAX`      | API     | No (default `60`)                     | No      | Write-route limit per window per IP (also applies to `/api/benchmarks/run`)                           |
+| `NEXT_PUBLIC_API_URL`       | Web     | No (default `http://localhost:4000`)  | **Yes** | The only server the browser talks to; baked in **at build time** — see Production Configuration below |
+
+No variable here is a secret in this project's current form: the
+local `DATABASE_URL`/`REDIS_URL` are throwaway Docker Compose
+credentials, not production secrets. A real deployment's
+`DATABASE_URL`/`REDIS_URL` **will** contain real credentials and must
+be set only via the hosting provider's own environment/secret
+configuration — never committed, never logged (the API's structured
+logs never include connection strings or request bodies for this
+reason).
+
+## Docker
+
+`docker-compose.yml` provides local PostgreSQL 16 and Redis 7 only —
+`apps/api` and `apps/web` run directly via `pnpm`, not as compose
+services, and there are no `Dockerfile`s in this repository. This
+matches the intended deployment split (Vercel builds `apps/web`
+natively from source; Render can run `apps/api` as a native Node web
+service with no Dockerfile — see Deployment Architecture below). If a
+containerized API deployment is chosen instead, a `Dockerfile` for
+`apps/api` would need to be added at that time.
+
+```bash
+docker compose config   # validate
+docker compose up -d    # start Postgres + Redis
+docker compose ps       # confirm both are healthy
+```
+
+## Database
+
+Prisma migrations are the only supported way to create/update the
+schema — there is exactly one migration
+(`apps/api/prisma/migrations/20260913151753_init`), which creates all
+three models (`Product`, `RequestMetric`, `BenchmarkRun`) and their
+enums in one step.
+
+```bash
+pnpm --filter @cacheforge/api db:migrate          # local dev (prisma migrate dev)
+pnpm --filter @cacheforge/api db:migrate:deploy   # production (prisma migrate deploy — non-interactive, no drift/reset logic)
+pnpm --filter @cacheforge/api db:seed             # optional demo catalog
+```
+
+`db:migrate:deploy` has been verified against a genuinely fresh,
+empty PostgreSQL database (not the long-lived dev database) — see
+`DEPLOYMENT_READINESS.md`.
+
+## Redis
+
+Optional at runtime by design (PROJECT_SPEC.md §9): every cache/rate-
+limit/pub-sub operation fails open if Redis is unreachable, and
+`GET /api/health` reports `redis: "down"` independently of overall
+health. `REDIS_URL` accepts a managed provider's connection string
+(TLS via `rediss://`, credentials embedded in the URL) with no code
+change — see Environment variables above.
+
+## Testing
+
+```bash
+pnpm test              # every workspace: 183 tests (contracts 17, cache-kit 26, apps/web 52, apps/api 88)
+pnpm --filter @cacheforge/api test:unit          # apps/api unit tests only (no external services)
+pnpm --filter @cacheforge/api test:integration   # apps/api integration tests (real Postgres + Redis required)
+```
+
+Integration tests run against the same local Postgres/Redis started
+by `docker compose up -d` — there is no separate ephemeral test
+database (a documented, accepted trade-off; see `docs/decisions.md`).
+
+## Build
+
+```bash
+pnpm build   # packages first, then apps — tsc for cache-kit/contracts/api, `next build` for web
+```
+
+`apps/web`'s build runs `scripts/copy-docs.mjs` first (via `prebuild`)
+to copy `README.md`/`docs/*.md` into `apps/web/content/` so the
+Documentation page's file reads stay correctly scoped for Next's
+output-file tracer — see `docs/decisions.md`.
+
+## Production configuration
+
+- **API:** `pnpm --filter @cacheforge/api build && pnpm --filter @cacheforge/api start` runs the compiled `dist/server.js` with `NODE_ENV=production` set by the hosting platform. Verified locally by actually running this exact sequence — see `DEPLOYMENT_READINESS.md`.
+- **Web:** `pnpm --filter @cacheforge/web build && pnpm --filter @cacheforge/web start` runs `next start`. **`NEXT_PUBLIC_API_URL` must be set in the build environment**, not just at runtime — Next.js inlines `NEXT_PUBLIC_*` variables into the client bundle at build time, so setting it only when starting the server has no effect.
+- **CORS:** set the API's `CORS_ORIGIN` to the deployed frontend's exact origin (e.g. `https://cacheforge.vercel.app`) before any real traffic reaches it from that origin.
+
+## Deployment architecture
+
+The target architecture this project is built for (PROJECT_SPEC.md
+§18) — **not yet deployed**:
+
+```
+apps/web   → Vercel (or any static/edge Next.js host)
+apps/api   → Render, or any host that can run `node dist/server.js`
+PostgreSQL → Neon, Render Postgres, or any reachable PostgreSQL 16+
+Redis      → Upstash, or any reachable Redis 7+ (optional at runtime)
+```
+
+No cloud accounts, databases, or Redis instances have been created by
+this project. See `DEPLOYMENT_READINESS.md` for the full pre/during/
+after-deployment checklist and the current readiness verdict.
+
+## Known limitations
+
+- **Fire-and-forget metrics:** a process crash in the narrow window
+  between "response sent" and "`RequestMetric` insert completed" loses
+  that one row. Acceptable for this project's aggregate-trend
+  observability; not acceptable for audit-grade data. See
+  `docs/decisions.md`.
+- **No authentication:** every write and destructive endpoint
+  (`POST`/`PUT`/`DELETE /api/products*`, `DELETE /api/cache/:key`,
+  `POST /api/benchmarks/run`) is protected only by input validation and
+  IP-based rate limiting, not per-user authorization — a deliberate,
+  documented trade-off for a single-operator demo (PROJECT_SPEC.md
+  §25), re-confirmed as still true in `DEPLOYMENT_READINESS.md`.
+- **Rate-limit defaults are placeholders:** 300 reads / 60 writes per
+  60-second window per IP are reasonable local-dev defaults, not
+  numbers derived from expected production traffic — review before a
+  public deployment.
+- **No CI pipeline yet:** all verification in this README has been run
+  manually; PROJECT_SPEC.md §17 describes the intended GitHub Actions
+  pipeline, not yet implemented.
+
 ## Monorepo layout
 
 ```
@@ -76,14 +206,17 @@ docs/              Architecture, caching, performance, decisions
 
 ## Common scripts
 
-| Command                                    | Description                               |
-| ------------------------------------------ | ----------------------------------------- |
-| `pnpm dev`                                 | Run `apps/api` and `apps/web` in parallel |
-| `pnpm lint`                                | Lint every workspace                      |
-| `pnpm typecheck`                           | Type-check every workspace                |
-| `pnpm test`                                | Run tests in every workspace              |
-| `pnpm build`                               | Build every workspace                     |
-| `pnpm format`                              | Format the repo with Prettier             |
-| `pnpm --filter @cacheforge/api db:migrate` | Apply Prisma migrations                   |
-| `pnpm --filter @cacheforge/api db:seed`    | Seed a small demo product catalog         |
-| `pnpm --filter @cacheforge/api db:studio`  | Open Prisma Studio against the local DB   |
+| Command                                           | Description                               |
+| ------------------------------------------------- | ----------------------------------------- |
+| `pnpm dev`                                        | Run `apps/api` and `apps/web` in parallel |
+| `pnpm lint`                                       | Lint every workspace                      |
+| `pnpm typecheck`                                  | Type-check every workspace                |
+| `pnpm test`                                       | Run tests in every workspace              |
+| `pnpm build`                                      | Build every workspace                     |
+| `pnpm format`                                     | Format the repo with Prettier             |
+| `pnpm --filter @cacheforge/api db:migrate`        | Apply Prisma migrations (dev)             |
+| `pnpm --filter @cacheforge/api db:migrate:deploy` | Apply Prisma migrations (production)      |
+| `pnpm --filter @cacheforge/api db:seed`           | Seed a small demo product catalog         |
+| `pnpm --filter @cacheforge/api db:studio`         | Open Prisma Studio against the local DB   |
+| `pnpm --filter @cacheforge/api start`             | Run the compiled production API           |
+| `pnpm --filter @cacheforge/web start`             | Run the compiled production frontend      |
