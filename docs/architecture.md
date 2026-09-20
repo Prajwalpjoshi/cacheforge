@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: **Phase 4 (observability + Performance Lab backend)**. This
+> Status: **Phase 5 (production frontend)**. This
 > document is filled in as each layer is actually built. See
 > `PROJECT_SPEC.md` §6 for the full, target architecture diagram and
 > rationale — nothing below should contradict it.
@@ -32,12 +32,14 @@
     in-process DB-vs-cache measurements. See `docs/performance.md`.
   - Every `/api/*` route except `/api/health` is Redis-backed
     fixed-window rate limited (stricter on writes).
-- `apps/web`: a Next.js App Router shell with the landing page and shared
-  layout/typography/color tokens. No data-fetching pages yet.
+- `apps/web`: a full Next.js App Router application — landing page,
+  Overview Dashboard, Performance Lab, Cache Explorer, API Explorer,
+  System Health, Architecture, and Documentation, all consuming the
+  real API above. See the dedicated "Frontend" section below.
 - `packages/contracts`: Zod schemas for the health response, the full
   Product API surface, the cache admin endpoints, metrics
   (summary/request-log), and the benchmark engine's request/response
-  shapes, shared by `apps/api` and (eventually) `apps/web`.
+  shapes, shared by `apps/api` and `apps/web` alike.
 - `packages/cache-kit`: a real, framework-agnostic Redis toolkit — see
   below — with its own unit test suite run against a real Redis
   instance (not mocked).
@@ -139,8 +141,50 @@ cache-kit -> redis`, per PROJECT_SPEC.md §16).
   for `COMPARISON`, which PROJECT_SPEC.md §10 describes as a single
   `BenchmarkRun` response containing both sub-results, not two rows.
 
-## What's not built yet
+## Frontend (`apps/web`)
 
-The frontend entirely (Cache Explorer, API Explorer, Performance Lab
-UI, dashboard, System Health page). These follow the phased plan in
-`PROJECT_SPEC.md` §24.
+- **App Router, two route groups.** `app/(marketing)` holds the
+  landing page under its original `SiteHeader`/`SiteFooter`; `app/(app)`
+  wraps every internal page (Overview, Performance Lab, Cache Explorer,
+  API Explorer, System Health, Architecture, Documentation) in
+  `components/app-shell/app-shell.tsx` — a desktop sidebar / mobile
+  drawer shell with a live, independently-polled system-status pill.
+  Both groups share one root `layout.tsx` (fonts + the TanStack Query
+  provider) but are otherwise deliberately distinct visual identities,
+  per PROJECT_SPEC.md §5, despite there being no auth to separate them.
+- **`lib/api/*.ts`** is the only code that talks to the Fastify API —
+  one module per resource, every response validated against the
+  matching schema from `@cacheforge/contracts` before the rest of the
+  app ever sees it, so a backend/frontend contract drift fails loudly
+  in development rather than rendering silently-wrong data. Errors are
+  normalized once (`lib/api/error-message.ts`) into a message every
+  page can show directly.
+- **TanStack Query** drives every data-fetching page: 5s polling for
+  the dashboard/cache explorer, 10s for health, on-demand (mutations)
+  for the Performance Lab and API Explorer. No page substitutes
+  fabricated data for a loading/empty/error state — see
+  `packages/contracts`-typed empty states throughout
+  `apps/web/components/*`.
+- **Performance Lab** (`components/performance/`) renders exactly what
+  `POST /api/benchmarks/run` / `GET /api/benchmarks[/:id]` return —
+  including the backend's own `*ImprovementPct` values for a
+  `COMPARISON` run, never recomputed client-side — plus a benchmark
+  history table and an on-demand detail view with the run's real raw
+  latency distribution.
+- **Cache Explorer** (`components/cache/`) found, while verifying
+  Redis-down behavior against the real container, that
+  `GET /api/cache/stats` fails open to a _successful_ 200 with
+  all-zero counters (indistinguishable from a freshly-empty cache) —
+  so it additionally cross-checks `GET /api/health` and shows an
+  explicit "Redis unavailable" state whenever `redis: "down"`,
+  regardless of what the stats endpoint itself reports. See
+  `docs/decisions.md`.
+- **API Explorer** (`lib/api-explorer/catalog.ts`) is a hand-curated
+  endpoint catalog, not a generated one — no `@fastify/swagger` plugin
+  exists in `apps/api` (see `docs/decisions.md` for why that stayed a
+  backend non-change in a frontend-only phase). Every "Try it" request
+  goes to the real running API; nothing is simulated.
+- **Documentation page** (`lib/docs.ts`) reads this repository's own
+  `README.md`/`docs/*.md` files from disk at request time and renders
+  them with `react-markdown` — the docs page and the committed files
+  can never drift into two versions of the truth.

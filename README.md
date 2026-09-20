@@ -9,22 +9,22 @@ rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
 ## Status
 
-**Phase 4 — observability + Performance Lab backend.** The
-monorepo/tooling foundation, a Fastify API with a real PostgreSQL-backed
-Product CRUD API, Redis cache-aside/rate-limiting/pub-sub, and a
-Next.js landing page exist. Every real product-catalog request is now
-persisted as a `RequestMetric` row and summarized by
-`GET /api/metrics/summary` / `GET /api/metrics/requests` — real
-aggregates computed in PostgreSQL, never fabricated. The Performance
-Lab backend (`POST /api/benchmarks/run`, `GET /api/benchmarks[/:id]`)
-runs real, in-process DB-vs-cache benchmarks — real
-`process.hrtime.bigint()` measurements, real percentiles, real
-throughput, real cache hit rates, persisted as `BenchmarkRun` rows —
-that a future frontend will visualize; see `docs/performance.md` for
-the methodology and one real measured run. Redis/Postgres failure
-remains fail-open/degraded exactly as in Phase 3, re-verified against
-the actual Docker containers. The frontend (dashboard, Performance Lab
-UI, Cache Explorer, API Explorer) is not built yet.
+**Phase 5 — production frontend.** The full stack now exists end to
+end: a Fastify API (PostgreSQL-backed Product CRUD, Redis cache-aside/
+rate-limiting/pub-sub, a real observability pipeline, and an in-process
+Performance Lab benchmark engine) and a Next.js frontend that actually
+visualizes and operates it. The frontend consumes every real endpoint —
+`/api/health`, `/api/products*`, `/api/metrics/*`, `/api/cache/*`,
+`/api/benchmarks/*` — through a typed client layer validated against
+the shared `@cacheforge/contracts` schemas: an Overview Dashboard (live
+metrics, per-route/per-request charts, recent-requests table), a
+Performance Lab (run/inspect real DB-vs-cache benchmarks), a Cache
+Explorer (browse/delete real Redis keys), an API Explorer (send real
+requests to every documented endpoint), a System Health page, and an
+Architecture/Documentation pair that render the project's own real
+diagrams and markdown. No page substitutes fabricated numbers for a
+loading/empty/error state. See `docs/decisions.md` for what changed
+and why during this phase.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single

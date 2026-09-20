@@ -327,3 +327,100 @@ makes.
 Acceptable for a demo observability pipeline reporting on aggregate
 trends, not acceptable for audit-grade/billing data — documented as a
 known, deliberate limitation rather than left implicit.
+
+## 2026-09-20 — No `@fastify/swagger` added; the API Explorer is a hand-curated catalog
+
+**Context:** PROJECT_SPEC.md §10/§14 (FR14) calls for an OpenAPI
+document at `GET /api/docs`, but no `@fastify/swagger`/`swagger-ui`
+plugin was ever registered in Phases 1–4 — there is no OpenAPI JSON
+anywhere in the running API. Phase 5's brief prefers building the API
+Explorer from a real OpenAPI document when one exists.
+**Decision:** Did not add the Swagger plugin. Instead,
+`apps/web/lib/api-explorer/catalog.ts` hand-curates all 14 endpoints
+directly from the real Zod contracts (`packages/contracts`) and the
+real route files (`apps/api/src/routes/*.ts`), grouped by resource;
+every "Try it" request in the explorer goes straight to the real
+running API (`lib/api-explorer/execute-request.ts` never simulates a
+response, and never throws on a non-2xx — it renders whatever the
+server actually returned, including the exact error body).
+**Reason:** Phase 5 is explicitly scoped as frontend-only ("do not
+make backend changes unless a genuine frontend blocker is
+discovered"). Adding Swagger generation is a real, if small, backend
+addition — a new plugin, a new dependency, and (for a useful explorer)
+`tags`/`summary` metadata sprinkled across every existing route file —
+none of which was necessary: the shared contracts already fully
+describe every endpoint's shape, and reading them directly produces an
+equally accurate, zero-risk-to-Phase-1–4-code explorer.
+**Trade-off:** The catalog is a second, hand-maintained description of
+the API surface that must be kept in sync with `packages/contracts` by
+a human/reviewer rather than generated automatically — acceptable for
+this project's size (14 endpoints), and revisited if `/api/docs` is
+ever added in a later, backend-focused phase.
+
+## 2026-09-20 — Cache Explorer cross-checks `/api/health`, not just the cache endpoints' own errors
+
+**Context:** While manually verifying Redis-down behavior against the
+real Docker container for the Cache Explorer page, `GET /api/cache/
+stats` turned out to degrade to a **successful 200** with all-zero
+counters (`cache-kit`'s `getStats()` fails open exactly as designed —
+see `docs/caching.md`), while `GET /api/cache/keys` genuinely errors
+(500, since its `SCAN`/`TYPE`/`TTL` calls aren't wrapped the same way).
+Zeroed stats and a freshly-empty cache are visually identical, which
+would have silently violated PROJECT_SPEC.md §12's requirement that an
+unreachable Redis show an _explicit_, distinct state.
+**Decision:** `CacheExplorerView` also fetches `GET /api/health` and
+shows the "Redis unavailable" state for the stats panel whenever
+`health.redis === "down"`, regardless of whether the stats query
+itself reported success.
+**Reason:** `/api/health` is the one endpoint that always tells the
+truth about Redis's reachability unconditionally; inferring it from
+each cache-admin endpoint's own success/failure would have meant every
+new admin endpoint needs its own audit for "does this fail open in a
+way that looks like real data."
+**Trade-off:** None functionally — an extra, already-cheap, already-
+polled-elsewhere health check per page load.
+
+## 2026-09-20 — Dark-first design tokens, `apps/web` route groups for two visual identities
+
+**Context:** PROJECT_SPEC.md §13 calls for a dark-mode-first palette;
+Phase 1's `globals.css` shipped a light-mode-default palette with a
+`prefers-color-scheme: dark` override (reasonable for a foundation
+commit, not for the finished product). Separately, §5 asks the landing
+page and the "application" to read as two distinct experiences.
+**Decision:** Flipped `globals.css` so the unqualified `:root` palette
+_is_ the dark palette, with a `prefers-color-scheme: light` override
+kept for light-system visitors (no toggle was requested, so none was
+built). Split `apps/web/app` into an `(marketing)` route group (the
+original `SiteHeader`/`SiteFooter` landing experience) and an `(app)`
+route group (a new sidebar `AppShell`) — both route groups render
+under the same URLs as before (route groups don't affect paths), so
+this was a non-breaking internal reorganization.
+**Reason:** Matches the explicit design direction without inventing an
+unrequested feature (theme toggle), and gives the seven internal pages
+built in this phase a real, consistent shell (desktop sidebar, mobile
+drawer, live status pill) instead of duplicating navigation chrome
+per page.
+**Trade-off:** None significant.
+
+## 2026-09-20 — Documentation page reads markdown from disk; no build-time file tracing configured
+
+**Context:** PROJECT_SPEC.md §22's docs strategy names four `docs/*.md`
+files plus the root `README.md` as the single source of truth for
+written documentation; Phase 5 explicitly prefers "rendering/reusing
+existing documentation rather than maintaining multiple conflicting
+copies."
+**Decision:** `apps/web/lib/docs.ts` reads those five real files from
+the monorepo root via `node:fs/promises` inside a Server Component,
+rendered with `react-markdown`. No `outputFileTracingRoot`/
+`outputFileTracingIncludes` was added to `next.config.ts`.
+**Reason:** This works correctly for local development and any
+same-machine deployment (`next start` after `next build`, or the
+`docker compose` stack), which is this project's current, actual
+deployment story per PROJECT_SPEC.md §24 (deployment is a later
+phase). Configuring Next's file-tracing now, before a serverless
+deployment target is chosen, would be guessing at requirements the
+project doesn't have yet.
+**Trade-off:** A future serverless/standalone deployment (Vercel) must
+verify these five files are included in the traced output — flagged
+explicitly here rather than silently assumed to work, and left for the
+deployment phase (PROJECT_SPEC.md §24) to address for real.
