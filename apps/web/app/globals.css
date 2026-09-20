@@ -1,48 +1,79 @@
 @import "tailwindcss";
 
+/*
+ * Dark-first: CacheForge is a developer/infra tool (PROJECT_SPEC.md §13),
+ * so the unqualified :root palette IS the dark palette. A
+ * prefers-color-scheme: light override is kept for the minority of
+ * visitors on a light-mode system, rather than building a toggle that
+ * wasn't requested.
+ */
 :root {
-  --background: #fafafa;
-  --foreground: #131316;
-  --surface: #ffffff;
-  --border: #e4e4e7;
-  --muted: #71717a;
-  --accent: #0d9488;
-  --accent-foreground: #f0fdfa;
-  --status-hit: #16a34a;
-  --status-miss: #d97706;
-  --status-down: #dc2626;
-  --status-neutral: #71717a;
+  --background: #0a0a0b;
+  --foreground: #e4e4e7;
+  --surface: #111113;
+  --surface-raised: #16161a;
+  --border: #26262b;
+  --border-strong: #34343b;
+  --muted: #9a9aa2;
+  --muted-foreground: #6f6f78;
+  --accent: #2dd4bf;
+  --accent-foreground: #04211d;
+  --status-hit: #4ade80;
+  --status-hit-foreground: #052e16;
+  --status-miss: #fbbf24;
+  --status-miss-foreground: #341a03;
+  --status-down: #f87171;
+  --status-down-foreground: #450a0a;
+  --status-neutral: #9a9aa2;
+  --status-neutral-foreground: #18181b;
+  --focus-ring: #2dd4bf;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-status-hit: var(--status-hit);
+  --color-status-hit-foreground: var(--status-hit-foreground);
   --color-status-miss: var(--status-miss);
+  --color-status-miss-foreground: var(--status-miss-foreground);
   --color-status-down: var(--status-down);
+  --color-status-down-foreground: var(--status-down-foreground);
   --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-foreground: var(--status-neutral-foreground);
+  --color-focus-ring: var(--focus-ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0b;
-    --foreground: #e4e4e7;
-    --surface: #131316;
-    --border: #26262b;
-    --muted: #9a9aa2;
-    --accent: #2dd4bf;
-    --accent-foreground: #04211d;
-    --status-hit: #4ade80;
-    --status-miss: #fbbf24;
-    --status-down: #f87171;
-    --status-neutral: #9a9aa2;
+    --background: #fafafa;
+    --foreground: #131316;
+    --surface: #ffffff;
+    --surface-raised: #f4f4f5;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --muted: #52525b;
+    --muted-foreground: #71717a;
+    --accent: #0d9488;
+    --accent-foreground: #f0fdfa;
+    --status-hit: #16a34a;
+    --status-hit-foreground: #f0fdf4;
+    --status-miss: #d97706;
+    --status-miss-foreground: #fffbeb;
+    --status-down: #dc2626;
+    --status-down-foreground: #fef2f2;
+    --status-neutral: #71717a;
+    --status-neutral-foreground: #fafafa;
+    --focus-ring: #0d9488;
   }
 }
 
@@ -50,4 +81,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
