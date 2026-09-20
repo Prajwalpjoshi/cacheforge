@@ -8,7 +8,7 @@ import {
   Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FlowDiagram } from "@/components/marketing/flow-diagram";
+import { FlowDiagram } from "@/components/diagrams/flow-diagram";
 import { PerformancePreview } from "@/components/marketing/performance-preview";
 
 const PILLARS = [

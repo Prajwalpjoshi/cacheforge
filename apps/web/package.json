@@ -28,7 +28,9 @@
     "react-hook-form": "^7.65.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.3.1",
+    "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.6.2"
   },
