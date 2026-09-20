@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/copy-docs.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-docs.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,7 +13,7 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:integration": "echo \"no integration tests for web yet\"",
-    "clean": "rimraf .next coverage"
+    "clean": "rimraf .next content coverage"
   },
   "dependencies": {
     "@cacheforge/contracts": "workspace:*",

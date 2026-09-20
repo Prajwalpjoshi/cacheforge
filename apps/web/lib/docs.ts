@@ -5,7 +5,7 @@ import path from "node:path";
 export interface DocSection {
   slug: string;
   title: string;
-  /** Path relative to the monorepo root (two levels above apps/web). */
+  /** Path relative to apps/web/content/, populated by scripts/copy-docs.mjs (pre-dev/pre-build) from the real docs/ + README.md at the monorepo root. */
   file: string;
 }
 
@@ -17,7 +17,7 @@ export interface DocSection {
  * instruction not to introduce claims the docs don't support).
  */
 export const DOC_SECTIONS: DocSection[] = [
-  { slug: "getting-started", title: "Getting Started", file: "README.md" },
+  { slug: "getting-started", title: "Getting Started", file: "readme.md" },
   { slug: "architecture", title: "Architecture", file: "docs/architecture.md" },
   {
     slug: "caching",
@@ -36,13 +36,16 @@ export const DOC_SECTIONS: DocSection[] = [
   },
 ];
 
-const REPO_ROOT = path.resolve(process.cwd(), "..", "..");
+// Statically scoped under this project's own directory (never `..` out
+// of it) so Next's output-file tracer can correctly and narrowly trace
+// this read instead of falling back to tracing the whole monorepo.
+const CONTENT_ROOT = path.join(process.cwd(), "content");
 
 export async function readDocSection(slug: string): Promise<string | null> {
   const section = DOC_SECTIONS.find((entry) => entry.slug === slug);
   if (!section) return null;
   try {
-    return await readFile(path.join(REPO_ROOT, section.file), "utf-8");
+    return await readFile(path.join(CONTENT_ROOT, section.file), "utf-8");
   } catch {
     return null;
   }
