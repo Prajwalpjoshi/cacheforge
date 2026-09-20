@@ -105,18 +105,16 @@ describe("executeRequest", () => {
   });
 
   it("never throws on a non-2xx response — it returns the real error body", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        jsonResponse(
-          {
-            statusCode: 404,
-            error: "NotFoundError",
-            message: 'Product "x" not found',
-          },
-          { status: 404, statusText: "Not Found" },
-        ),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        {
+          statusCode: 404,
+          error: "NotFoundError",
+          message: 'Product "x" not found',
+        },
+        { status: 404, statusText: "Not Found" },
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await executeRequest({
