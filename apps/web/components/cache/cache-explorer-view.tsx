@@ -17,20 +17,33 @@ import {
   useCacheStats,
   useDeleteCacheKey,
 } from "@/lib/hooks/use-cache";
+import { useHealth } from "@/lib/hooks/use-health";
 import { getErrorMessage } from "@/lib/api/error-message";
 import { CacheStatsPanel } from "./cache-stats-panel";
 import { CacheKeyTable } from "./cache-key-table";
 
 const REDIS_UNAVAILABLE_MESSAGE =
-  "Redis is unreachable. The cache admin endpoints have no other real failure mode — the rest of the API keeps working from PostgreSQL while this is degraded.";
+  "Redis is unreachable. The rest of the API keeps working from PostgreSQL while this is degraded.";
 
+/**
+ * GET /api/cache/stats degrades to a *valid-looking* 200 with all-zero
+ * counters when Redis is down (cache-kit's own getStats() fails open),
+ * unlike GET /api/cache/keys, which genuinely errors. Zeroes and "no
+ * traffic yet" are visually identical, so this page cross-checks the
+ * one endpoint that tells the truth unconditionally — GET /api/health
+ * — rather than trusting each cache endpoint's own success/failure to
+ * mean what it looks like it means.
+ */
 export function CacheExplorerView() {
   const [pattern, setPattern] = useState("");
   const appliedPattern = pattern.trim() || undefined;
 
+  const healthQuery = useHealth();
   const statsQuery = useCacheStats();
   const keysQuery = useCacheKeys(appliedPattern);
   const deleteMutation = useDeleteCacheKey();
+
+  const redisDown = healthQuery.data?.data.redis === "down";
 
   const [openKey, setOpenKey] = useState<string | null>(null);
 
@@ -60,13 +73,20 @@ export function CacheExplorerView() {
           <CardTitle>Cache stats</CardTitle>
         </CardHeader>
         <CardContent>
-          {statsQuery.isPending ? (
+          {statsQuery.isPending || healthQuery.isPending ? (
             <Skeleton className="h-20 w-full" />
-          ) : statsQuery.isError ? (
+          ) : statsQuery.isError || redisDown ? (
             <ErrorState
               title="Redis unavailable"
-              message={REDIS_UNAVAILABLE_MESSAGE}
-              onRetry={() => void statsQuery.refetch()}
+              message={
+                statsQuery.isError
+                  ? getErrorMessage(statsQuery.error)
+                  : REDIS_UNAVAILABLE_MESSAGE
+              }
+              onRetry={() => {
+                void statsQuery.refetch();
+                void healthQuery.refetch();
+              }}
             />
           ) : (
             <CacheStatsPanel stats={statsQuery.data.data} />
