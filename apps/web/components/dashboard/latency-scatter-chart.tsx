@@ -54,62 +54,73 @@ export function LatencyScatterChart({
   })).filter((s) => s.points.length > 0);
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <ScatterChart margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-        <XAxis
-          dataKey="index"
-          type="number"
-          tick={{ fontSize: 11, fill: "var(--color-muted)" }}
-          label={{
-            value: "request order (oldest → newest)",
-            position: "insideBottom",
-            offset: -4,
-            fontSize: 11,
-            fill: "var(--color-muted)",
-          }}
-        />
-        <YAxis
-          dataKey="durationMs"
-          type="number"
-          tick={{ fontSize: 11, fill: "var(--color-muted)" }}
-          label={{
-            value: "ms",
-            angle: -90,
-            position: "insideLeft",
-            fontSize: 11,
-            fill: "var(--color-muted)",
-          }}
-        />
-        <Tooltip
-          contentStyle={{
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 6,
-            fontSize: 12,
-          }}
-          formatter={(value, name, item) => {
-            const payload = item.payload as {
-              method: string;
-              route: string;
-              createdAt: string;
-            };
-            return [
-              `${formatMs(value as number)} · ${payload.method} ${payload.route} · ${formatClockTime(payload.createdAt)}`,
-              "",
-            ];
-          }}
-        />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        {series.map((s) => (
-          <Scatter
-            key={s.status}
-            name={s.descriptor.label}
-            data={s.points}
-            fill={TONE_CSS_VAR[s.descriptor.tone]}
+    <>
+      {/* Text fallback: this is the same data as the "Recent requests" table elsewhere on this page. */}
+      <p className="sr-only">
+        Scatter plot of {chronological.length} recent requests&apos; latency,
+        colored by cache status. See the Recent requests table on this page for
+        the same data in text form.
+      </p>
+      <ResponsiveContainer width="100%" height={260}>
+        <ScatterChart
+          margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+          aria-hidden="true"
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <XAxis
+            dataKey="index"
+            type="number"
+            tick={{ fontSize: 11, fill: "var(--color-muted)" }}
+            label={{
+              value: "request order (oldest → newest)",
+              position: "insideBottom",
+              offset: -4,
+              fontSize: 11,
+              fill: "var(--color-muted)",
+            }}
           />
-        ))}
-      </ScatterChart>
-    </ResponsiveContainer>
+          <YAxis
+            dataKey="durationMs"
+            type="number"
+            tick={{ fontSize: 11, fill: "var(--color-muted)" }}
+            label={{
+              value: "ms",
+              angle: -90,
+              position: "insideLeft",
+              fontSize: 11,
+              fill: "var(--color-muted)",
+            }}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              fontSize: 12,
+            }}
+            formatter={(value, name, item) => {
+              const payload = item.payload as {
+                method: string;
+                route: string;
+                createdAt: string;
+              };
+              return [
+                `${formatMs(value as number)} · ${payload.method} ${payload.route} · ${formatClockTime(payload.createdAt)}`,
+                "",
+              ];
+            }}
+          />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          {series.map((s) => (
+            <Scatter
+              key={s.status}
+              name={s.descriptor.label}
+              data={s.points}
+              fill={TONE_CSS_VAR[s.descriptor.tone]}
+            />
+          ))}
+        </ScatterChart>
+      </ResponsiveContainer>
+    </>
   );
 }

@@ -20,39 +20,53 @@ export function LatencyDistributionChart({
   const sorted = [...latenciesMs].sort((a, b) => a - b);
   const data = sorted.map((value, index) => ({ index, value }));
 
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-        <XAxis
-          dataKey="index"
-          tick={{ fontSize: 10, fill: "var(--color-muted)" }}
-          label={{
-            value: "sorted samples",
-            position: "insideBottom",
-            offset: -2,
-            fontSize: 10,
-            fill: "var(--color-muted)",
-          }}
-        />
-        <YAxis tick={{ fontSize: 10, fill: "var(--color-muted)" }} />
-        <Tooltip
-          contentStyle={{
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 6,
-            fontSize: 12,
-          }}
-          formatter={(value) => [formatMs(value as number), "latency"]}
-        />
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke="var(--color-accent)"
-          dot={false}
-          strokeWidth={2}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <>
+      <p className="sr-only">
+        Line chart of {sorted.length} sorted per-iteration latency samples, from{" "}
+        {formatMs(min)} to {formatMs(max)}. The summary statistics above
+        (min/avg/P50/P95/P99) are computed from this same data.
+      </p>
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart
+          data={data}
+          margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+          aria-hidden="true"
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <XAxis
+            dataKey="index"
+            tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+            label={{
+              value: "sorted samples",
+              position: "insideBottom",
+              offset: -2,
+              fontSize: 10,
+              fill: "var(--color-muted)",
+            }}
+          />
+          <YAxis tick={{ fontSize: 10, fill: "var(--color-muted)" }} />
+          <Tooltip
+            contentStyle={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              fontSize: 12,
+            }}
+            formatter={(value) => [formatMs(value as number), "latency"]}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="var(--color-accent)"
+            dot={false}
+            strokeWidth={2}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </>
   );
 }
