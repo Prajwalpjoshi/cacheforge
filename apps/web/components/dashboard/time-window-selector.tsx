@@ -29,7 +29,7 @@ export function TimeWindowSelector({
           aria-pressed={value === window.minutes}
           onClick={() => onChange(window.minutes)}
           className={cn(
-            "rounded px-3 py-1.5 text-xs font-medium transition-colors",
+            "rounded px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 focus-visible:ring-offset-surface",
             value === window.minutes
               ? "bg-accent/10 text-accent"
               : "text-muted hover:text-foreground",

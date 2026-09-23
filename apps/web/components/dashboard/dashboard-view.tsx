@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Activity, BarChart3, ListChecks, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
@@ -13,7 +13,7 @@ import { formatRelativeTime } from "@/lib/format";
 import { TimeWindowSelector } from "./time-window-selector";
 import { KpiTiles } from "./kpi-tiles";
 import { RequestVolumeChart } from "./request-volume-chart";
-import { LatencyScatterChart } from "./latency-scatter-chart";
+import { LatencyTrendChart } from "./latency-trend-chart";
 import { RecentRequestsTable } from "./recent-requests-table";
 
 const REQUEST_LIMIT = 100;
@@ -30,6 +30,15 @@ export function DashboardView() {
     ? new Date(summaryQuery.dataUpdatedAt).toISOString()
     : null;
 
+  const hasRouteData =
+    !summaryQuery.isPending &&
+    !summaryQuery.isError &&
+    summaryQuery.data.data.byRoute.length > 0;
+  const hasRequestData =
+    !requestsQuery.isPending &&
+    !requestsQuery.isError &&
+    requestsQuery.data.data.length > 0;
+
   function refreshAll() {
     void summaryQuery.refetch();
     void requestsQuery.refetch();
@@ -37,14 +46,19 @@ export function DashboardView() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6">
+    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="space-y-1">
           <h1 className="text-xl font-semibold text-foreground">Overview</h1>
           <p className="text-sm text-muted">
             Live visibility into API performance, cache behavior, and system
             health.
           </p>
+          {lastUpdated && (
+            <p className="text-xs text-muted-foreground">
+              Last updated {formatRelativeTime(lastUpdated)}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <TimeWindowSelector
@@ -57,12 +71,6 @@ export function DashboardView() {
           </Button>
         </div>
       </div>
-
-      {lastUpdated && (
-        <p className="-mt-4 text-xs text-muted">
-          Last updated {formatRelativeTime(lastUpdated)}
-        </p>
-      )}
 
       {summaryQuery.isError ? (
         <ErrorState
@@ -79,8 +87,14 @@ export function DashboardView() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Requests by route</CardTitle>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="inline-flex items-center gap-1.5">
+              <BarChart3 aria-hidden="true" className="size-4 text-accent" />
+              Requests by route
+            </CardTitle>
+            {hasRouteData && (
+              <span className="text-xs text-muted">Top 5 routes</span>
+            )}
           </CardHeader>
           <CardContent>
             {summaryQuery.isPending ? (
@@ -97,8 +111,16 @@ export function DashboardView() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Recent latency by cache status</CardTitle>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="inline-flex items-center gap-1.5">
+              <Activity aria-hidden="true" className="size-4 text-accent" />
+              Recent latency by cache status
+            </CardTitle>
+            {hasRequestData && (
+              <span className="text-xs text-muted">
+                Last {requestsQuery.data.data.length} requests
+              </span>
+            )}
           </CardHeader>
           <CardContent>
             {requestsQuery.isPending ? (
@@ -109,15 +131,18 @@ export function DashboardView() {
                 onRetry={() => void requestsQuery.refetch()}
               />
             ) : (
-              <LatencyScatterChart requests={requestsQuery.data.data} />
+              <LatencyTrendChart requests={requestsQuery.data.data} />
             )}
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Recent requests</CardTitle>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle className="inline-flex items-center gap-1.5">
+            <ListChecks aria-hidden="true" className="size-4 text-accent" />
+            Recent requests
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {requestsQuery.isPending ? (

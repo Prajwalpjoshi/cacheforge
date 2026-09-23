@@ -1,9 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Box } from "lucide-react";
 import { SidebarNav } from "./sidebar-nav";
 import { MobileNav } from "./mobile-nav";
 import { SystemStatusPill } from "./system-status-pill";
+import { ApiConnectionStatus } from "./api-connection-status";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { version as appVersion } from "../../package.json";
 
 /**
  * The internal application shell — deliberately a Server Component.
@@ -18,16 +21,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <Link
           href="/"
-          className="flex items-center gap-2 border-b border-border px-5 py-4 font-mono text-sm font-semibold tracking-tight text-foreground"
+          className="flex items-center gap-2.5 border-b border-border px-5 py-4 font-mono text-sm font-semibold tracking-tight text-foreground"
         >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+            <Box aria-hidden="true" className="size-4" />
+          </span>
           CacheForge
         </Link>
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <SidebarNav />
         </div>
-        <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-4">
-          <SystemStatusPill />
-          <ThemeToggle />
+        <div className="border-t border-border px-5 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <ApiConnectionStatus />
+            <ThemeToggle />
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            CacheForge v{appVersion}
+          </p>
         </div>
       </aside>
 
@@ -35,8 +46,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 md:hidden">
           <Link
             href="/"
-            className="font-mono text-sm font-semibold tracking-tight text-foreground"
+            className="flex items-center gap-2 font-mono text-sm font-semibold tracking-tight text-foreground"
           >
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+              <Box aria-hidden="true" className="size-3.5" />
+            </span>
             CacheForge
           </Link>
           <div className="flex items-center gap-2">

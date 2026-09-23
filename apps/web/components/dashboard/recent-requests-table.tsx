@@ -48,29 +48,29 @@ export function RecentRequestsTable({
         <TableBody>
           {requests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-mono text-xs">
+              <TableCell className="py-2 font-mono text-xs">
                 {request.route}
               </TableCell>
-              <TableCell className="font-mono text-xs">
+              <TableCell className="py-2 font-mono text-xs">
                 {request.method}
               </TableCell>
-              <TableCell>
+              <TableCell className="py-2">
                 <StatusBadge
                   descriptor={describeHttpStatus(request.statusCode)}
                 />
               </TableCell>
-              <TableCell className="font-mono text-xs tabular-nums">
+              <TableCell className="py-2 font-mono text-xs tabular-nums">
                 {formatMs(request.durationMs)}
               </TableCell>
-              <TableCell>
+              <TableCell className="py-2">
                 <StatusBadge
                   descriptor={describeCacheStatus(request.cacheStatus)}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="py-2">
                 <StatusBadge descriptor={describeDataSource(request.source)} />
               </TableCell>
-              <TableCell className="font-mono text-xs text-muted">
+              <TableCell className="py-2 font-mono text-xs text-muted">
                 {formatClockTime(request.createdAt)}
               </TableCell>
             </TableRow>
