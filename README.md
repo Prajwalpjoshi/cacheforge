@@ -24,6 +24,18 @@ See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single
 source of truth for this project.
 
+## Documentation
+
+| Document                                                                                                                                                              | For                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`docs/HOW_CACHEFORGE_WORKS.md`](./docs/HOW_CACHEFORGE_WORKS.md)                                                                                                      | The fastest way to understand what happens on every request — start here          |
+| [`docs/TECHNICAL_ARCHITECTURE.md`](./docs/TECHNICAL_ARCHITECTURE.md)                                                                                                  | The deep engineering reference — every layer, flow, and endpoint traced to source |
+| [`docs/ARCHITECTURE_DIAGRAM.md`](./docs/ARCHITECTURE_DIAGRAM.md)                                                                                                      | Every architecture diagram in one place                                           |
+| [`docs/DEVELOPER_GUIDE.md`](./docs/DEVELOPER_GUIDE.md)                                                                                                                | Onboarding steps and "where do I change X"                                        |
+| [`docs/INTERVIEW_GUIDE.md`](./docs/INTERVIEW_GUIDE.md)                                                                                                                | How to explain this project out loud, at three depths                             |
+| [`docs/architecture.md`](./docs/architecture.md), [`caching.md`](./docs/caching.md), [`performance.md`](./docs/performance.md), [`decisions.md`](./docs/decisions.md) | The phase-by-phase build log (what was built, when, and why)                      |
+| [`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md)                                                                                                                | The Phase 6 pre-deployment audit                                                  |
+
 ## Stack
 
 Next.js · TypeScript · Tailwind CSS · Fastify · Zod · Pino · PostgreSQL ·
