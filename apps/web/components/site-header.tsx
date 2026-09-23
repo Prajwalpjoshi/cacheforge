@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -13,13 +13,16 @@ const PRIMARY_LINKS = [
 export function SiteHeader() {
   return (
     <header className="border-b border-border">
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-3.5">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-2.5">
         <Link
           href="/"
-          className="font-mono text-sm font-semibold tracking-tight"
+          className="flex items-center gap-1.5 font-mono text-sm font-semibold tracking-tight"
         >
-          <span className="text-foreground">Cache</span>
-          <span className="text-accent">Forge</span>
+          <Box aria-hidden="true" className="size-4 text-accent" />
+          <span>
+            <span className="text-foreground">Cache</span>
+            <span className="text-accent">Forge</span>
+          </span>
         </Link>
         <nav
           aria-label="Primary"

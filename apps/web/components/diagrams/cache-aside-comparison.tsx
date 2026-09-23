@@ -1,4 +1,5 @@
 import {
+  ArrowDownRight,
   ArrowRight,
   CheckCircle2,
   Database,
@@ -63,7 +64,7 @@ function FlowArrow() {
 /** Two independent, non-overlapping diagram cards — the previous single flex row overflowed its grid column on any viewport under ~1400px because a 4-step chain doesn't fit half of a max-w-5xl container. Each card here wraps internally instead of spilling into its neighbor. */
 export function WithoutCachingDiagram() {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-lg border border-status-down/20 bg-status-down/5 p-6">
+    <div className="flex flex-col gap-4 rounded-lg border border-status-down/20 bg-status-down/5 p-6">
       <div className="flex items-center gap-2">
         <XCircle
           aria-hidden="true"
@@ -74,7 +75,7 @@ export function WithoutCachingDiagram() {
         </p>
       </div>
 
-      <div className="flex flex-1 flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <DiagramNode icon={Monitor} label="Client" />
         <FlowArrow />
         <DiagramNode icon={Server} label="API" />
@@ -89,7 +90,7 @@ export function WithoutCachingDiagram() {
 
 export function WithCacheAsideDiagram() {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-lg border border-status-hit/20 bg-status-hit/5 p-6">
+    <div className="flex flex-col gap-4 rounded-lg border border-status-hit/20 bg-status-hit/5 p-6">
       <div className="flex items-center gap-2">
         <CheckCircle2
           aria-hidden="true"
@@ -100,32 +101,32 @@ export function WithCacheAsideDiagram() {
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <DiagramNode icon={Monitor} label="Client" />
           <FlowArrow />
           <DiagramNode icon={Server} label="API" />
           <FlowArrow />
           <DiagramNode icon={Database} label="Redis" tone="accent" />
+          <FlowArrow />
+          <StatusBadge descriptor={describeCacheStatus("HIT")} />
+          <FlowArrow />
+          <DiagramNode icon={FileText} label="Return data" tone="hit" />
+          <span className="text-xs text-muted">fast — no DB hit</span>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] items-center gap-x-3 gap-y-3 border-t border-border/60 pt-3">
-          <StatusBadge descriptor={describeCacheStatus("HIT")} />
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <FlowArrow />
-            <DiagramNode icon={FileText} label="Return data" tone="hit" />
-            <span className="text-xs text-muted">fast — no DB hit</span>
-          </div>
-
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+          <ArrowDownRight
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
           <StatusBadge descriptor={describeCacheStatus("MISS")} />
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <FlowArrow />
-            <DiagramNode icon={Database} label="PostgreSQL" />
-            <FlowArrow />
-            <DiagramNode icon={Database} label="Redis SET" tone="accent" />
-            <FlowArrow />
-            <DiagramNode icon={FileText} label="Return data" />
-          </div>
+          <FlowArrow />
+          <DiagramNode icon={Database} label="PostgreSQL" />
+          <FlowArrow />
+          <DiagramNode icon={Database} label="Redis SET" tone="accent" />
+          <FlowArrow />
+          <DiagramNode icon={FileText} label="Return data" />
         </div>
       </div>
 

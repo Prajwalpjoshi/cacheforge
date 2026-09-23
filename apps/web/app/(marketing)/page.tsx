@@ -50,30 +50,30 @@ const CAPABILITIES = [
 
 export default function Home() {
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-14 px-6 py-10 sm:py-12">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-12 px-6 py-8 sm:py-10">
       <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
         <div className="flex flex-col gap-5">
-          <p className="font-mono text-sm uppercase text-accent">
+          <p className="font-mono text-sm font-semibold uppercase text-accent">
             Observe. Cache. Measure. Optimize.
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
             <span className="text-foreground">Cache</span>
             <span className="text-accent">Forge</span>
           </h1>
-          <p className="max-w-[620px] text-base leading-7 text-muted sm:text-lg sm:leading-8">
+          <p className="max-w-[540px] text-base leading-normal text-muted">
             A production-style API performance lab for understanding database
             latency, Redis caching, and measurable performance improvements —
             against a real PostgreSQL database and a real Redis instance, not a
             simulation.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg">
+            <Button asChild size="md">
               <Link href="/dashboard">
                 Open Dashboard
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </Button>
-            <Button asChild variant="secondary" size="lg">
+            <Button asChild variant="secondary" size="md">
               <Link href="/architecture">
                 Explore Architecture
                 <ArrowRight aria-hidden="true" className="size-4" />
@@ -102,7 +102,7 @@ export default function Home() {
             makes both the cost and the fix visible and measurable.
           </p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <WithoutCachingDiagram />
           <WithCacheAsideDiagram />
         </div>
@@ -139,7 +139,7 @@ export default function Home() {
             Explore the dashboard, run benchmarks, and inspect cache behavior.
           </p>
         </div>
-        <Button asChild size="lg">
+        <Button asChild size="md">
           <Link href="/dashboard">
             Open Dashboard
             <ArrowRight aria-hidden="true" className="size-4" />

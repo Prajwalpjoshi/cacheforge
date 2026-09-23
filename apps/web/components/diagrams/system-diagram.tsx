@@ -1,10 +1,25 @@
-import { ArrowDown, Database, Layers, Monitor, Server } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowDownLeft,
+  ArrowDownRight,
+  Database,
+  Layers,
+  Monitor,
+  Server,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const DATA_LAYER: { label: string; icon: LucideIcon }[] = [
-  { label: "PostgreSQL", icon: Database },
-  { label: "Redis", icon: Database },
+type NodeTone = "neutral" | "accent" | "postgres" | "redis";
+
+const DATA_LAYER: {
+  label: string;
+  detail: string;
+  icon: LucideIcon;
+  tone: NodeTone;
+}[] = [
+  { label: "PostgreSQL", detail: "Data", icon: Database, tone: "postgres" },
+  { label: "Redis", detail: "Cache", icon: Database, tone: "redis" },
 ];
 
 /** The top-level PROJECT_SPEC.md #6 architecture, adjusted to what actually exists: Next.js -> Fastify -> {Redis, PostgreSQL}, with the observability/benchmark pipeline living inside the API rather than as a separate box. `compact` drops the descriptive subtext for the hero placement; the Architecture page uses the full version. */
@@ -34,19 +49,35 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
         tone="accent"
         compact={compact}
       />
-      <Arrow />
+      <div className={cn("flex justify-center", compact ? "gap-8" : "gap-12")}>
+        <ArrowDownLeft
+          aria-hidden="true"
+          className={cn(
+            compact ? "size-3.5" : "size-4",
+            "text-muted-foreground",
+          )}
+        />
+        <ArrowDownRight
+          aria-hidden="true"
+          className={cn(
+            compact ? "size-3.5" : "size-4",
+            "text-muted-foreground",
+          )}
+        />
+      </div>
       <div
         className={cn(
           "flex flex-wrap justify-center",
           compact ? "gap-3" : "gap-4",
         )}
       >
-        {DATA_LAYER.map(({ label, icon }) => (
+        {DATA_LAYER.map(({ label, detail, icon, tone }) => (
           <Box
             key={label}
             icon={icon}
             label={label}
-            tone={label === "Redis" ? "accent" : "neutral"}
+            detail={detail}
+            tone={tone}
             compact={compact}
           />
         ))}
@@ -54,6 +85,20 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+
+const TONE_BOX_CLASSES: Record<NodeTone, string> = {
+  neutral: "border-border bg-surface",
+  accent: "border-accent/30 bg-accent/5",
+  postgres: "border-blue-500/30 bg-blue-500/5",
+  redis: "border-status-down/30 bg-status-down/5",
+};
+
+const TONE_ICON_CLASSES: Record<NodeTone, string> = {
+  neutral: "text-muted-foreground",
+  accent: "text-accent",
+  postgres: "text-blue-500",
+  redis: "text-status-down",
+};
 
 function Box({
   icon: Icon,
@@ -65,7 +110,7 @@ function Box({
   icon: LucideIcon;
   label: string;
   detail?: string;
-  tone?: "neutral" | "accent";
+  tone?: NodeTone;
   compact?: boolean;
 }) {
   return (
@@ -73,17 +118,12 @@ function Box({
       className={cn(
         "flex flex-col items-center gap-1 rounded-lg border text-center",
         compact ? "px-3 py-2" : "px-5 py-3",
-        tone === "accent"
-          ? "border-accent/30 bg-accent/5"
-          : "border-border bg-surface",
+        TONE_BOX_CLASSES[tone],
       )}
     >
       <Icon
         aria-hidden="true"
-        className={cn(
-          compact ? "size-3.5" : "size-4",
-          tone === "accent" ? "text-accent" : "text-muted-foreground",
-        )}
+        className={cn(compact ? "size-3.5" : "size-4", TONE_ICON_CLASSES[tone])}
       />
       <span
         className={cn(
