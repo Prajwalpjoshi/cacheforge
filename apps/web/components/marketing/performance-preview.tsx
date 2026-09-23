@@ -16,9 +16,10 @@ import { Button } from "@/components/ui/button";
  * methodology-only explanation — never placeholder numbers.
  */
 export function PerformancePreview() {
+  const query = { pageSize: 20 };
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.benchmarks(20),
-    queryFn: () => listBenchmarks(20),
+    queryKey: queryKeys.benchmarks(query),
+    queryFn: () => listBenchmarks(query),
   });
 
   if (isPending) {
@@ -32,7 +33,7 @@ export function PerformancePreview() {
   }
 
   const comparisonRun = !isError
-    ? data?.data.find((run) => run.mode === "COMPARISON")
+    ? data?.data.items.find((run) => run.mode === "COMPARISON")
     : undefined;
 
   if (!comparisonRun) {

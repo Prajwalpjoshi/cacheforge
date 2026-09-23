@@ -9,35 +9,33 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/ui/error-state";
-import {
-  useBenchmarkHistory,
-  useRunBenchmark,
-} from "@/lib/hooks/use-benchmarks";
 import { getErrorMessage } from "@/lib/api/error-message";
+import { useRunBenchmark } from "@/lib/hooks/use-benchmarks";
 import { BenchmarkForm } from "./benchmark-form";
-import { BenchmarkResultPanel } from "./benchmark-result-panel";
-import { BenchmarkHistoryTable } from "./benchmark-history-table";
+import { BenchmarkSummaryStrip } from "./benchmark-summary-strip";
+import { BenchmarkHistoryPanel } from "./benchmark-history-panel";
 import { BenchmarkDetailSheet } from "./benchmark-detail-sheet";
-import { Methodology } from "./methodology";
 
 export function PerformanceView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const historyQuery = useBenchmarkHistory();
   const runMutation = useRunBenchmark();
 
   function handleSubmit(input: BenchmarkRunRequest) {
-    runMutation.mutate(input);
+    // Opens the same real detail view a History row's "View" button
+    // opens, immediately populated with this run's result — no separate
+    // inline "Result" card duplicating that UI.
+    runMutation.mutate(input, {
+      onSuccess: (result) => setSelectedId(result.data.id),
+    });
   }
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           Performance Lab
         </h1>
-        <p className="text-sm text-muted">
+        <p className="max-w-2xl text-sm text-muted">
           Run real, in-process benchmarks comparing PostgreSQL and the
           Redis-backed cache-aside path.
         </p>
@@ -62,48 +60,15 @@ export function PerformanceView() {
         </CardContent>
       </Card>
 
-      {runMutation.isSuccess && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Result</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BenchmarkResultPanel run={runMutation.data.data} />
-          </CardContent>
-        </Card>
-      )}
+      <BenchmarkSummaryStrip />
 
       <Card>
         <CardHeader>
           <CardTitle>History</CardTitle>
+          <CardDescription>Recent benchmark runs and results.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {historyQuery.isPending ? (
-            <div className="p-5">
-              <Skeleton className="h-48 w-full" />
-            </div>
-          ) : historyQuery.isError ? (
-            <div className="p-5">
-              <ErrorState
-                message="Unable to load benchmark history."
-                onRetry={() => void historyQuery.refetch()}
-              />
-            </div>
-          ) : (
-            <BenchmarkHistoryTable
-              runs={historyQuery.data.data}
-              onSelect={setSelectedId}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Methodology</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Methodology />
+          <BenchmarkHistoryPanel onSelect={setSelectedId} />
         </CardContent>
       </Card>
 

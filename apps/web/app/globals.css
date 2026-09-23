@@ -28,6 +28,10 @@
   --status-down-foreground: #450a0a;
   --status-neutral: #9a9aa2;
   --status-neutral-foreground: #18181b;
+  --mode-db: #60a5fa;
+  --mode-db-foreground: #0c2a4d;
+  --mode-cache: #a78bfa;
+  --mode-cache-foreground: #2e1065;
   --focus-ring: #2dd4bf;
   color-scheme: dark;
 }
@@ -51,6 +55,10 @@
   --status-down-foreground: #fef2f2;
   --status-neutral: #71717a;
   --status-neutral-foreground: #fafafa;
+  --mode-db: #2563eb;
+  --mode-db-foreground: #eff6ff;
+  --mode-cache: #7c3aed;
+  --mode-cache-foreground: #f5f3ff;
   --focus-ring: #0d9488;
   color-scheme: light;
 }
@@ -74,6 +82,10 @@
   --color-status-down-foreground: var(--status-down-foreground);
   --color-status-neutral: var(--status-neutral);
   --color-status-neutral-foreground: var(--status-neutral-foreground);
+  --color-mode-db: var(--mode-db);
+  --color-mode-db-foreground: var(--mode-db-foreground);
+  --color-mode-cache: var(--mode-cache);
+  --color-mode-cache-foreground: var(--mode-cache-foreground);
   --color-focus-ring: var(--focus-ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -99,6 +111,10 @@
     --status-down-foreground: #fef2f2;
     --status-neutral: #71717a;
     --status-neutral-foreground: #fafafa;
+    --mode-db: #2563eb;
+    --mode-db-foreground: #eff6ff;
+    --mode-cache: #7c3aed;
+    --mode-cache-foreground: #f5f3ff;
     --focus-ring: #0d9488;
     color-scheme: light;
   }

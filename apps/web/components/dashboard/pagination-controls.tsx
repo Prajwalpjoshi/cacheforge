@@ -17,12 +17,20 @@ export function PaginationControls({
   total,
   onPageChange,
   onPageSizeChange,
+  itemLabel = "requests",
+  ariaLabel = "Recent requests pagination",
+  showPageSizeControl = true,
 }: {
   page: number;
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  /** Noun shown in the "Showing X–Y of Z ___" label. */
+  itemLabel?: string;
+  ariaLabel?: string;
+  /** Set to false when the page-size choice already lives in a toolbar above the table, so it isn't offered twice. */
+  showPageSizeControl?: boolean;
 }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const [from, to] = pageRange(page, pageSize, total);
@@ -33,31 +41,30 @@ export function PaginationControls({
       <div className="flex items-center gap-3 text-xs text-muted">
         <span>
           {total === 0
-            ? "0 requests"
-            : `Showing ${formatInteger(from)}–${formatInteger(to)} of ${formatInteger(total)} requests`}
+            ? `0 ${itemLabel}`
+            : `Showing ${formatInteger(from)}–${formatInteger(to)} of ${formatInteger(total)} ${itemLabel}`}
         </span>
-        <label className="flex items-center gap-1.5">
-          <span className="sr-only">Rows per page</span>
-          <Select
-            aria-label="Rows per page"
-            value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-7 w-16 px-2 text-xs"
-          >
-            {PAGE_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </Select>
-          <span>/ page</span>
-        </label>
+        {showPageSizeControl && (
+          <label className="flex items-center gap-1.5">
+            <span className="sr-only">Rows per page</span>
+            <Select
+              aria-label="Rows per page"
+              value={pageSize}
+              onChange={(event) => onPageSizeChange(Number(event.target.value))}
+              className="h-7 w-16 px-2 text-xs"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </Select>
+            <span>/ page</span>
+          </label>
+        )}
       </div>
 
-      <nav
-        aria-label="Recent requests pagination"
-        className="flex items-center gap-1"
-      >
+      <nav aria-label={ariaLabel} className="flex items-center gap-1">
         <button
           type="button"
           aria-label="Previous page"

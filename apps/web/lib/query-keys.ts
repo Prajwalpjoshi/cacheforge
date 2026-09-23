@@ -1,4 +1,7 @@
-import type { RequestMetricsQuery } from "@cacheforge/contracts";
+import type {
+  BenchmarkListQuery,
+  RequestMetricsQuery,
+} from "@cacheforge/contracts";
 
 /** Centralized TanStack Query key factory so invalidation targets stay in sync with fetch call sites. */
 export const queryKeys = {
@@ -14,6 +17,12 @@ export const queryKeys = {
   cacheStats: () => ["cache", "stats"] as const,
   cacheKeys: (pattern: string | undefined) =>
     ["cache", "keys", pattern ?? null] as const,
-  benchmarks: (limit: number) => ["benchmarks", "list", limit] as const,
+  // The full query object (page, search, mode, ...) is the key, so the
+  // summary strip's fixed unfiltered fetch and the History table's
+  // filtered/paginated fetch are cached and refetched independently —
+  // changing the table's filters never touches the summary strip.
+  benchmarks: (query: Partial<BenchmarkListQuery>) =>
+    ["benchmarks", "list", query] as const,
+  benchmarkSummary: () => ["benchmarks", "summary"] as const,
   benchmark: (id: string) => ["benchmarks", "detail", id] as const,
 };

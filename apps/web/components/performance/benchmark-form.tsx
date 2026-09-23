@@ -117,7 +117,15 @@ export function BenchmarkForm({
           <Input
             id="label"
             placeholder="e.g. after adding an index"
-            {...register("label")}
+            {...register("label", {
+              // An untouched/cleared uncontrolled input reads back as ""
+              // (not undefined) — without this, submitting with the
+              // field left blank fails benchmarkRunRequestSchema's
+              // `.optional()` (which requires >= 1 char when present)
+              // and the button silently does nothing.
+              setValueAs: (value: string) =>
+                value.trim() === "" ? undefined : value,
+            })}
           />
         </div>
       </div>

@@ -42,9 +42,7 @@ export async function listBenchmarksController(
   request: FastifyRequest<{ Querystring: BenchmarkListQuery }>,
   reply: FastifyReply,
 ): Promise<void> {
-  const result = await request.server.benchmarkService.list(
-    request.query.limit,
-  );
+  const result = await request.server.benchmarkService.list(request.query);
   reply.send(result);
 }
 

@@ -1,3 +1,19 @@
+import type { BenchmarkMode } from "@cacheforge/contracts";
+
+/** Badge color per benchmark mode — a plain visual distinction (not a status signal), so it doesn't reuse the success/warning/danger tone system in lib/status.ts. */
+export function benchmarkModeTone(
+  mode: BenchmarkMode,
+): "accent" | "info" | "violet" {
+  switch (mode) {
+    case "COMPARISON":
+      return "accent";
+    case "DB_ONLY":
+      return "info";
+    case "CACHE_ONLY":
+      return "violet";
+  }
+}
+
 /**
  * Presentation logic for a benchmark comparison's *ImprovementPct
  * values. The backend already orients every one of these as

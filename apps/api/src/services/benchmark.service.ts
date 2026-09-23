@@ -2,6 +2,8 @@ import { BenchmarkMode } from "../generated/prisma/client.js";
 import type { BenchmarkRun as PrismaBenchmarkRun } from "../generated/prisma/client.js";
 import type { Cache, RedisClientLike } from "@cacheforge/cache-kit";
 import type {
+  BenchmarkListQuery,
+  BenchmarkListResponse,
   BenchmarkRunDetail,
   BenchmarkRunRequest,
   BenchmarkRunSummary,
@@ -353,9 +355,14 @@ export function createBenchmarkService(deps: BenchmarkServiceDeps) {
       return toDetail(row);
     },
 
-    async list(limit: number): Promise<BenchmarkRunSummary[]> {
-      const rows = await repository.list(limit);
-      return rows.map(toSummary);
+    async list(query: BenchmarkListQuery): Promise<BenchmarkListResponse> {
+      const { items, total } = await repository.list(query);
+      return {
+        items: items.map(toSummary),
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+      };
     },
   };
 }

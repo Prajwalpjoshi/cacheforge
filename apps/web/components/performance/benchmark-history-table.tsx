@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { formatClockTime, formatMs, formatThroughput } from "@/lib/format";
+import { benchmarkModeTone } from "@/lib/benchmark-presentation";
 
+/** Pure presentation — BenchmarkHistoryPanel owns loading/empty/error state and only renders this once `runs` is a non-empty page. */
 export function BenchmarkHistoryTable({
   runs,
   onSelect,
@@ -20,15 +21,6 @@ export function BenchmarkHistoryTable({
   runs: BenchmarkRunSummary[];
   onSelect: (id: string) => void;
 }) {
-  if (runs.length === 0) {
-    return (
-      <EmptyState
-        title="No benchmark runs yet"
-        description="Run your first benchmark to compare database and Redis performance."
-      />
-    );
-  }
-
   return (
     <TableContainer>
       <Table>
@@ -54,7 +46,7 @@ export function BenchmarkHistoryTable({
                 {formatClockTime(run.createdAt)}
               </TableCell>
               <TableCell>
-                <Badge tone="accent">{run.mode}</Badge>
+                <Badge tone={benchmarkModeTone(run.mode)}>{run.mode}</Badge>
               </TableCell>
               <TableCell className="font-mono text-xs">
                 {run.targetRoute}

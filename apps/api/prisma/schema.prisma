@@ -67,6 +67,9 @@ model BenchmarkRun {
   cacheHitRate   Float?
   rawLatenciesMs Json
   createdAt      DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([mode, createdAt])
 }
 
 enum BenchmarkMode {

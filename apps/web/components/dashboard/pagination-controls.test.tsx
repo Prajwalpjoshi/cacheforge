@@ -101,4 +101,36 @@ describe("PaginationControls", () => {
     });
     expect(onPageSizeChange).toHaveBeenCalledWith(20);
   });
+
+  it("uses a custom item label and aria-label when provided", () => {
+    render(
+      <PaginationControls
+        page={1}
+        pageSize={10}
+        total={47}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+        itemLabel="runs"
+        ariaLabel="Benchmark history pagination"
+      />,
+    );
+    expect(screen.getByText("Showing 1–10 of 47 runs")).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "Benchmark history pagination" }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the built-in rows control when showPageSizeControl is false", () => {
+    render(
+      <PaginationControls
+        page={1}
+        pageSize={10}
+        total={47}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+        showPageSizeControl={false}
+      />,
+    );
+    expect(screen.queryByLabelText("Rows per page")).not.toBeInTheDocument();
+  });
 });

@@ -1,5 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { BenchmarkRunRequest } from "@cacheforge/contracts";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type {
+  BenchmarkListQuery,
+  BenchmarkRunRequest,
+} from "@cacheforge/contracts";
 import {
   getBenchmark,
   listBenchmarks,
@@ -7,12 +15,22 @@ import {
 } from "@/lib/api/benchmarks";
 import { queryKeys } from "@/lib/query-keys";
 
-const HISTORY_LIMIT = 20;
+/** Unfiltered single-row fetch backing the summary strip's "Total runs" and "Latest run/throughput" tiles — independent of whatever page/search/mode the History table below is showing. */
+const SUMMARY_QUERY: Partial<BenchmarkListQuery> = { page: 1, pageSize: 1 };
 
-export function useBenchmarkHistory() {
+/** `keepPreviousData` keeps the current page's rows on screen while a page/filter/search change is in flight, instead of flashing a loading state. */
+export function useBenchmarkHistory(query: Partial<BenchmarkListQuery>) {
   return useQuery({
-    queryKey: queryKeys.benchmarks(HISTORY_LIMIT),
-    queryFn: () => listBenchmarks(HISTORY_LIMIT),
+    queryKey: queryKeys.benchmarks(query),
+    queryFn: () => listBenchmarks(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useBenchmarkSummary() {
+  return useQuery({
+    queryKey: queryKeys.benchmarkSummary(),
+    queryFn: () => listBenchmarks(SUMMARY_QUERY),
   });
 }
 
@@ -29,9 +47,10 @@ export function useRunBenchmark() {
   return useMutation({
     mutationFn: (input: BenchmarkRunRequest) => runBenchmark(input),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks(HISTORY_LIMIT),
-      });
+      // Invalidates every benchmarks query (history at any page/filter,
+      // plus the summary strip) rather than just the currently-viewed
+      // one, so a freshly run benchmark is reflected everywhere.
+      void queryClient.invalidateQueries({ queryKey: ["benchmarks"] });
     },
   });
 }

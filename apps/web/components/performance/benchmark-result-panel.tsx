@@ -3,12 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { StatsGrid } from "./stats-grid";
 import { ComparisonView } from "./comparison-view";
 import { formatClockTime } from "@/lib/format";
+import { benchmarkModeTone } from "@/lib/benchmark-presentation";
 
 export function BenchmarkResultPanel({ run }: { run: BenchmarkRunDetail }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Badge tone="accent">{run.mode}</Badge>
+        <Badge tone={benchmarkModeTone(run.mode)}>{run.mode}</Badge>
         <span className="font-mono text-muted">{run.targetRoute}</span>
         {run.label && <span className="text-muted">— {run.label}</span>}
         <span className="ml-auto text-xs text-muted">

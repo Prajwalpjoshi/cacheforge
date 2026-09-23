@@ -13,6 +13,8 @@ const badgeVariants = cva(
         neutral:
           "border-status-neutral/30 bg-status-neutral/10 text-status-neutral",
         accent: "border-accent/30 bg-accent/10 text-accent",
+        info: "border-mode-db/30 bg-mode-db/10 text-mode-db",
+        violet: "border-mode-cache/30 bg-mode-cache/10 text-mode-cache",
       },
     },
     defaultVariants: { tone: "neutral" },

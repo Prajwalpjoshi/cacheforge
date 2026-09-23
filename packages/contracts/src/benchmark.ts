@@ -81,11 +81,23 @@ export const benchmarkRunDetailSchema = benchmarkRunSummarySchema.extend({
 export type BenchmarkRunDetail = z.infer<typeof benchmarkRunDetailSchema>;
 
 export const benchmarkListQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(100).default(20),
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
+  // Case-insensitive substring match against `targetRoute` OR `label` — see
+  // benchmark.repository.ts's `list()` for how this composes with `mode`.
+  search: z.string().trim().min(1).max(200).optional(),
+  mode: benchmarkModeSchema.optional(),
 });
 export type BenchmarkListQuery = z.infer<typeof benchmarkListQuerySchema>;
 
-export const benchmarkListResponseSchema = z.array(benchmarkRunSummarySchema);
+/** Same `{ items, page, pageSize, total }` envelope as requestMetricsResponseSchema — one pagination convention across the API. */
+export const benchmarkListResponseSchema = z.object({
+  items: z.array(benchmarkRunSummarySchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  total: z.number().int(),
+});
+export type BenchmarkListResponse = z.infer<typeof benchmarkListResponseSchema>;
 
 export const benchmarkIdParamsSchema = z.object({
   id: z.string().min(1),

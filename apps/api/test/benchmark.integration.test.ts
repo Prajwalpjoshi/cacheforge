@@ -279,10 +279,14 @@ describe("Benchmark engine", () => {
     it("lists recent runs newest-first, without raw latency arrays", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/benchmarks?limit=5",
+        url: "/api/benchmarks?pageSize=5",
       });
       expect(response.statusCode).toBe(200);
-      const rows = response.json();
+      const body = response.json();
+      expect(body.page).toBe(1);
+      expect(body.pageSize).toBe(5);
+      expect(typeof body.total).toBe("number");
+      const rows = body.items;
       expect(Array.isArray(rows)).toBe(true);
       expect(rows.length).toBeGreaterThan(0);
       expect(rows[0]).not.toHaveProperty("latenciesMs");
@@ -323,10 +327,160 @@ describe("Benchmark engine", () => {
       expect(response.statusCode).toBe(404);
     });
 
-    it("rejects a limit above the max with 400", async () => {
+    it("rejects a pageSize above the max with 400", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/benchmarks?limit=9999",
+        url: "/api/benchmarks?pageSize=9999",
+      });
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  describe("GET /api/benchmarks — pagination, search, and mode filtering", () => {
+    const filterRunId = randomUUID().slice(0, 8);
+    const dbLabel = `filter-db-${filterRunId}`;
+    const cacheLabel = `filter-cache-${filterRunId}`;
+    const comparisonLabel = `filter-cmp-${filterRunId}`;
+
+    beforeAll(async () => {
+      for (const [mode, label] of [
+        ["DB_ONLY", dbLabel],
+        ["CACHE_ONLY", cacheLabel],
+        ["COMPARISON", comparisonLabel],
+      ] as const) {
+        const response = await app.inject({
+          method: "POST",
+          url: "/api/benchmarks/run",
+          payload: {
+            targetRoute: "products.get",
+            mode,
+            iterations: 5,
+            label,
+          },
+        });
+        expect(response.statusCode).toBe(201);
+      }
+    });
+
+    it("returns the paginated envelope with a real total for a scoped search", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}&pageSize=10`,
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.page).toBe(1);
+      expect(body.pageSize).toBe(10);
+      expect(body.total).toBe(3);
+      expect(body.items).toHaveLength(3);
+    });
+
+    it("searches by label, case-insensitively", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId.toUpperCase()}`,
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.total).toBe(3);
+      for (const item of body.items) {
+        expect(item.label.toLowerCase()).toContain(filterRunId);
+      }
+    });
+
+    it("searches by target route", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/benchmarks?search=products.get&pageSize=100",
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.total).toBeGreaterThan(0);
+      for (const item of body.items) {
+        expect(item.targetRoute).toBe("products.get");
+      }
+    });
+
+    it("filters by mode", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}&mode=CACHE_ONLY`,
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.total).toBe(1);
+      expect(body.items[0].mode).toBe("CACHE_ONLY");
+      expect(body.items[0].label).toBe(cacheLabel);
+    });
+
+    it("combines search and mode filters", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}&mode=DB_ONLY`,
+      });
+      const body = response.json();
+      expect(body.total).toBe(1);
+      expect(body.items[0].label).toBe(dbLabel);
+    });
+
+    it("paginates: page 1 and page 2 return disjoint rows honoring pageSize", async () => {
+      const first = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}&page=1&pageSize=2`,
+      });
+      const firstBody = first.json();
+      expect(firstBody.items).toHaveLength(2);
+      expect(firstBody.total).toBe(3);
+
+      const second = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}&page=2&pageSize=2`,
+      });
+      const secondBody = second.json();
+      expect(secondBody.page).toBe(2);
+      expect(secondBody.items).toHaveLength(1);
+
+      const firstIds = new Set(
+        firstBody.items.map((item: { id: string }) => item.id),
+      );
+      for (const item of secondBody.items as { id: string }[]) {
+        expect(firstIds.has(item.id)).toBe(false);
+      }
+    });
+
+    it("returns an empty page (not an error) when the search matches nothing", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/benchmarks?search=this-label-does-not-exist-anywhere",
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.items).toEqual([]);
+      expect(body.total).toBe(0);
+    });
+
+    it("defaults to page 1 with pageSize 20 when omitted", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/benchmarks?search=${filterRunId}`,
+      });
+      const body = response.json();
+      expect(body.page).toBe(1);
+      expect(body.pageSize).toBe(20);
+    });
+
+    it("rejects an invalid mode with 400", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/benchmarks?mode=BOGUS_MODE",
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it("rejects page=0 with 400", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/benchmarks?page=0",
       });
       expect(response.statusCode).toBe(400);
     });

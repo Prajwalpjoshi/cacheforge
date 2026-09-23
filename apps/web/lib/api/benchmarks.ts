@@ -1,9 +1,10 @@
 import {
   benchmarkListResponseSchema,
   benchmarkRunDetailSchema,
+  type BenchmarkListQuery,
+  type BenchmarkListResponse,
   type BenchmarkRunDetail,
   type BenchmarkRunRequest,
-  type BenchmarkRunSummary,
 } from "@cacheforge/contracts";
 import { apiRequest, type ApiResult } from "./client";
 
@@ -17,10 +18,10 @@ export async function runBenchmark(
 }
 
 export async function listBenchmarks(
-  limit?: number,
-): Promise<ApiResult<BenchmarkRunSummary[]>> {
+  query: Partial<BenchmarkListQuery> = {},
+): Promise<ApiResult<BenchmarkListResponse>> {
   return apiRequest("/api/benchmarks", benchmarkListResponseSchema, {
-    query: { limit },
+    query,
   });
 }
 
