@@ -59,7 +59,10 @@ export function ThemeToggle() {
         <div
           role="group"
           aria-label="Theme"
-          className="absolute right-0 z-50 mt-2 w-36 overflow-hidden rounded-md border border-border bg-surface-raised py-1 shadow-lg"
+          // Opens upward (bottom-full, not top-full/mt-2): this control
+          // sits near the bottom of the sidebar, where a downward menu
+          // would be clipped by the viewport edge.
+          className="absolute right-0 bottom-full z-50 mb-2 w-36 overflow-hidden rounded-md border border-border bg-surface-raised py-1 shadow-lg"
         >
           {OPTIONS.map((option) => {
             const Icon = option.icon;

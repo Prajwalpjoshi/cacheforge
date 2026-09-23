@@ -30,8 +30,11 @@ export function DialogContent({
           "fixed z-50 border border-border bg-surface shadow-xl focus:outline-none",
           side === "center" &&
             "left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg p-5",
+          // Wide enough for the benchmark comparison's two-column stat
+          // grids (see stats-grid.tsx) without going full-screen on
+          // desktop; still 100vw on narrow viewports.
           side === "right" &&
-            "right-0 top-0 h-full w-full max-w-md overflow-y-auto p-5",
+            "right-0 top-0 h-full w-[min(820px,100vw)] overflow-y-auto p-5",
           side === "left" &&
             "left-0 top-0 h-full w-full max-w-xs overflow-y-auto p-5",
           className,

@@ -30,7 +30,11 @@ export function StatsGrid({
   const durationMs = deriveDurationMs(iterations, stats.throughputRps);
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    // @sm/@lg (container query, not viewport) so column count tracks
+    // this grid's own rendered width — full drawer width in single-run
+    // mode, roughly half of it side-by-side in COMPARISON mode (see the
+    // @container wrappers in benchmark-result-panel.tsx / comparison-view.tsx).
+    <div className="grid grid-cols-2 gap-3 @sm:grid-cols-3 @lg:grid-cols-4">
       <StatTile label="Min" value={formatMs(stats.minMs)} />
       <StatTile label="Avg" value={formatMs(stats.avgMs)} />
       <StatTile label="P50" value={formatMs(stats.p50Ms)} />

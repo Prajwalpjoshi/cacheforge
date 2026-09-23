@@ -28,7 +28,7 @@ export function StatTile({
       {loading ? (
         <Skeleton className="h-7 w-20" />
       ) : (
-        <span className="font-mono text-2xl font-semibold tabular-nums text-foreground">
+        <span className="whitespace-nowrap font-mono text-2xl font-semibold tabular-nums text-foreground">
           {value}
         </span>
       )}

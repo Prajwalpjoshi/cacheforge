@@ -18,7 +18,7 @@ import { version as appVersion } from "../../package.json";
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-svh flex-col md:flex-row">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
+      <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <Link
           href="/"
           className="flex items-center gap-2.5 border-b border-border px-5 py-4 font-mono text-sm font-semibold tracking-tight text-foreground"

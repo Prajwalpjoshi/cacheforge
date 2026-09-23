@@ -7,7 +7,10 @@ import { benchmarkModeTone } from "@/lib/benchmark-presentation";
 
 export function BenchmarkResultPanel({ run }: { run: BenchmarkRunDetail }) {
   return (
-    <div className="flex flex-col gap-4">
+    // @container: lets StatsGrid's column count respond to this panel's
+    // actual rendered width (e.g. inside the wider benchmark drawer)
+    // rather than the browser viewport width.
+    <div className="@container flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge tone={benchmarkModeTone(run.mode)}>{run.mode}</Badge>
         <span className="font-mono text-muted">{run.targetRoute}</span>
