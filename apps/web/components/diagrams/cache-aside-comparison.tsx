@@ -1,4 +1,13 @@
-import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Database,
+  FileText,
+  Monitor,
+  Server,
+  XCircle,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { describeCacheStatus } from "@/lib/status";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -11,20 +20,32 @@ const NODE_TONE_CLASSES: Record<NodeTone, string> = {
   hit: "border-status-hit/30 bg-status-hit/5 text-status-hit",
 };
 
+const NODE_ICON_CLASSES: Record<NodeTone, string> = {
+  neutral: "text-muted-foreground",
+  accent: "text-accent",
+  hit: "text-status-hit",
+};
+
 function DiagramNode({
+  icon: Icon,
   label,
   tone = "neutral",
 }: {
+  icon: LucideIcon;
   label: string;
   tone?: NodeTone;
 }) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-center font-mono text-xs font-semibold sm:text-sm",
+        "inline-flex shrink-0 flex-col items-center gap-1 rounded-lg border px-3 py-2 text-center font-mono text-xs font-semibold sm:text-sm",
         NODE_TONE_CLASSES[tone],
       )}
     >
+      <Icon
+        aria-hidden="true"
+        className={cn("size-3.5", NODE_ICON_CLASSES[tone])}
+      />
       {label}
     </span>
   );
@@ -54,11 +75,11 @@ export function WithoutCachingDiagram() {
       </div>
 
       <div className="flex flex-1 flex-wrap items-center gap-2">
-        <DiagramNode label="Client" />
+        <DiagramNode icon={Monitor} label="Client" />
         <FlowArrow />
-        <DiagramNode label="API" />
+        <DiagramNode icon={Server} label="API" />
         <FlowArrow />
-        <DiagramNode label="PostgreSQL" />
+        <DiagramNode icon={Database} label="PostgreSQL" />
       </div>
 
       <p className="text-xs text-muted">Every request hits the database.</p>
@@ -81,29 +102,29 @@ export function WithCacheAsideDiagram() {
 
       <div className="flex flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <DiagramNode label="Client" />
+          <DiagramNode icon={Monitor} label="Client" />
           <FlowArrow />
-          <DiagramNode label="API" />
+          <DiagramNode icon={Server} label="API" />
           <FlowArrow />
-          <DiagramNode label="Redis" tone="accent" />
+          <DiagramNode icon={Database} label="Redis" tone="accent" />
         </div>
 
         <div className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] items-center gap-x-3 gap-y-3 border-t border-border/60 pt-3">
           <StatusBadge descriptor={describeCacheStatus("HIT")} />
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <FlowArrow />
-            <DiagramNode label="Return data" tone="hit" />
+            <DiagramNode icon={FileText} label="Return data" tone="hit" />
             <span className="text-xs text-muted">fast — no DB hit</span>
           </div>
 
           <StatusBadge descriptor={describeCacheStatus("MISS")} />
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <FlowArrow />
-            <DiagramNode label="PostgreSQL" />
+            <DiagramNode icon={Database} label="PostgreSQL" />
             <FlowArrow />
-            <DiagramNode label="Redis SET" tone="accent" />
+            <DiagramNode icon={Database} label="Redis SET" tone="accent" />
             <FlowArrow />
-            <DiagramNode label="Return data" />
+            <DiagramNode icon={FileText} label="Return data" />
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ const PRIMARY_LINKS = [
 export function SiteHeader() {
   return (
     <header className="border-b border-border">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-3.5">
         <Link
           href="/"
           className="font-mono text-sm font-semibold tracking-tight text-foreground"

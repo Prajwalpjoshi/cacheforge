@@ -69,16 +69,16 @@ const CAPABILITIES = [
 
 export default function Home() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-20 px-6 py-16 sm:py-20">
-      <section className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-14 px-6 py-10 sm:py-12">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
+        <div className="flex flex-col gap-5">
           <p className="font-mono text-sm text-accent">
             Observe. Cache. Measure. Optimize.
           </p>
           <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             CacheForge
           </h1>
-          <p className="max-w-2xl text-lg leading-8 text-muted">
+          <p className="max-w-[620px] text-base leading-7 text-muted sm:text-lg sm:leading-8">
             A production-style API performance lab for understanding database
             latency, Redis caching, and measurable performance improvements —
             against a real PostgreSQL database and a real Redis instance, not a
@@ -93,11 +93,9 @@ export default function Home() {
             </Button>
           </div>
         </div>
-        <div
-          aria-hidden="true"
-          className="hidden shrink-0 rounded-xl border border-border bg-surface/50 p-5 lg:block"
-        >
-          <SystemDiagram />
+        <div aria-hidden="true" className="relative hidden shrink-0 lg:block">
+          <div className="absolute inset-0 -z-10 rounded-full bg-accent/10 blur-3xl" />
+          <SystemDiagram compact />
         </div>
       </section>
 
@@ -121,12 +119,12 @@ export default function Home() {
 
       <section
         aria-label="How CacheForge is built"
-        className="grid grid-cols-1 gap-6 sm:grid-cols-2"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
       >
         {PILLARS.map((pillar) => (
           <div
             key={pillar.title}
-            className="rounded-lg border border-border bg-surface p-6"
+            className="rounded-lg border border-border bg-surface p-5"
           >
             <h2 className="font-mono text-sm font-semibold text-accent">
               {pillar.title}
@@ -136,24 +134,23 @@ export default function Home() {
         ))}
       </section>
 
-      <section className="flex flex-col gap-6">
+      <section className="flex flex-col gap-5">
         <h2 className="text-xl font-semibold text-foreground">
           What&apos;s actually implemented
         </h2>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
           {CAPABILITIES.map((capability) => (
             <div
               key={capability.title}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-5 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm"
+              className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm"
             >
-              <capability.icon
-                aria-hidden="true"
-                className="size-5 text-accent"
-              />
+              <span className="inline-flex size-8 items-center justify-center rounded-md bg-accent/10 text-accent">
+                <capability.icon aria-hidden="true" className="size-4" />
+              </span>
               <h3 className="text-sm font-semibold text-foreground">
                 {capability.title}
               </h3>
-              <p className="text-sm leading-6 text-muted">{capability.body}</p>
+              <p className="text-xs leading-5 text-muted">{capability.body}</p>
             </div>
           ))}
         </div>
@@ -181,10 +178,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col items-start gap-4 border-t border-border pt-10">
-        <h2 className="text-xl font-semibold text-foreground">
-          See it running against real data
-        </h2>
+      <section className="flex flex-col items-start justify-between gap-4 rounded-lg border border-status-hit/20 bg-status-hit/5 p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl font-semibold text-foreground">
+            See it running against real data
+          </h2>
+          <p className="text-sm text-muted">
+            Explore the dashboard, run benchmarks, and inspect cache behavior.
+          </p>
+        </div>
         <Button asChild size="lg">
           <Link href="/dashboard">Open Dashboard</Link>
         </Button>
