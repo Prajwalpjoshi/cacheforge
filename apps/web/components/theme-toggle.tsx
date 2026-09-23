@@ -1,21 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme, type Theme } from "@/lib/theme/theme-provider";
 import { cn } from "@/lib/utils";
 
+// Only Light/Dark are user-selectable — "system" remains a valid Theme
+// value in the provider (still the default for a first-time visitor,
+// still what THEME_INIT_SCRIPT resolves before paint), it's just not
+// offered as its own menu item here.
 const OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "light", label: "Light mode", icon: Sun },
   { value: "dark", label: "Dark mode", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
 ];
 
 /** Icon-button theme switcher — persists via lib/theme/theme-provider.tsx, applied through the `data-theme` CSS tokens in app/globals.css (PROJECT_SPEC.md #13). */
 export function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  // This same component sits at the bottom of the desktop sidebar AND
+  // in the top mobile header — always opening upward (the fix for the
+  // former) would push the menu off-screen in the latter. Picking
+  // whichever side has more room keeps it fully on-screen in both.
+  const [direction, setDirection] = useState<"up" | "down">("up");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  function toggleOpen() {
+    if (!open && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setDirection(spaceAbove >= spaceBelow ? "up" : "down");
+    }
+    setOpen((value) => !value);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -37,15 +55,19 @@ export function ThemeToggle() {
     };
   }, [open]);
 
+  // Keyed off resolvedTheme (always "light"/"dark"), not the raw
+  // stored `theme` preference — that preference can still be "system"
+  // (e.g. a first-time visitor who hasn't chosen yet), which no longer
+  // has its own menu item to match against.
   const activeLabel =
-    OPTIONS.find((option) => option.value === theme)?.label ?? "Theme";
+    OPTIONS.find((option) => option.value === resolvedTheme)?.label ?? "Theme";
   const TriggerIcon = resolvedTheme === "light" ? Sun : Moon;
 
   return (
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggleOpen}
         aria-haspopup="true"
         aria-expanded={open}
         title={activeLabel}
@@ -59,14 +81,14 @@ export function ThemeToggle() {
         <div
           role="group"
           aria-label="Theme"
-          // Opens upward (bottom-full, not top-full/mt-2): this control
-          // sits near the bottom of the sidebar, where a downward menu
-          // would be clipped by the viewport edge.
-          className="absolute right-0 bottom-full z-50 mb-2 w-36 overflow-hidden rounded-md border border-border bg-surface-raised py-1 shadow-lg"
+          className={cn(
+            "absolute right-0 z-50 w-36 overflow-hidden rounded-md border border-border bg-surface-raised py-1 shadow-lg",
+            direction === "up" ? "bottom-full mb-2" : "top-full mt-2",
+          )}
         >
           {OPTIONS.map((option) => {
             const Icon = option.icon;
-            const active = theme === option.value;
+            const active = resolvedTheme === option.value;
             return (
               <button
                 key={option.value}
