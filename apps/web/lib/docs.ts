@@ -5,6 +5,8 @@ import path from "node:path";
 export interface DocSection {
   slug: string;
   title: string;
+  /** Short, real description of the section — shown under its title in the category nav and in the documentation table's "For" column. */
+  description: string;
   /** Path relative to apps/web/content/, populated by scripts/copy-docs.mjs (pre-dev/pre-build) from the real docs/ + README.md at the monorepo root. */
   file: string;
 }
@@ -17,21 +19,34 @@ export interface DocSection {
  * instruction not to introduce claims the docs don't support).
  */
 export const DOC_SECTIONS: DocSection[] = [
-  { slug: "getting-started", title: "Getting Started", file: "readme.md" },
-  { slug: "architecture", title: "Architecture", file: "docs/architecture.md" },
+  {
+    slug: "getting-started",
+    title: "Getting Started",
+    description: "Overview & quick start",
+    file: "readme.md",
+  },
+  {
+    slug: "architecture",
+    title: "Architecture",
+    description: "System design",
+    file: "docs/architecture.md",
+  },
   {
     slug: "caching",
     title: "Caching, Invalidation, Rate Limiting & Pub/Sub",
+    description: "Caching strategy",
     file: "docs/caching.md",
   },
   {
     slug: "performance",
     title: "Observability & Benchmark Methodology",
+    description: "Metrics & benchmarks",
     file: "docs/performance.md",
   },
   {
     slug: "decisions",
     title: "Decisions (ADR log)",
+    description: "Architecture decisions",
     file: "docs/decisions.md",
   },
 ];
