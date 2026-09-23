@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const PRIMARY_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -34,6 +35,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+          <ThemeToggle />
           <Button asChild size="sm">
             <Link href="/dashboard">Open Dashboard</Link>
           </Button>

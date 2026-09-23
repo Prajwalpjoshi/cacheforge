@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { SidebarNav } from "./sidebar-nav";
 import { MobileNav } from "./mobile-nav";
 import { SystemStatusPill } from "./system-status-pill";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /**
  * The internal application shell — deliberately a Server Component.
@@ -24,8 +25,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <SidebarNav />
         </div>
-        <div className="border-t border-border px-5 py-4">
+        <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-4">
           <SystemStatusPill />
+          <ThemeToggle />
         </div>
       </aside>
 
@@ -39,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <div className="flex items-center gap-2">
             <SystemStatusPill />
+            <ThemeToggle />
             <MobileNav />
           </div>
         </header>

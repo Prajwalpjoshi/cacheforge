@@ -8,8 +8,12 @@ import {
   Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FlowDiagram } from "@/components/diagrams/flow-diagram";
+import {
+  WithoutCachingDiagram,
+  WithCacheAsideDiagram,
+} from "@/components/diagrams/cache-aside-comparison";
 import { PerformancePreview } from "@/components/marketing/performance-preview";
+import { SystemDiagram } from "@/components/diagrams/system-diagram";
 
 const PILLARS = [
   {
@@ -66,26 +70,34 @@ const CAPABILITIES = [
 export default function Home() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-20 px-6 py-16 sm:py-20">
-      <section className="flex flex-col gap-6">
-        <p className="font-mono text-sm text-accent">
-          Observe. Cache. Measure. Optimize.
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          CacheForge
-        </h1>
-        <p className="max-w-2xl text-lg leading-8 text-muted">
-          A production-style API performance lab for understanding database
-          latency, Redis caching, and measurable performance improvements —
-          against a real PostgreSQL database and a real Redis instance, not a
-          simulation.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link href="/dashboard">Open Dashboard</Link>
-          </Button>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="/architecture">Explore Architecture</Link>
-          </Button>
+      <section className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="flex flex-col gap-6">
+          <p className="font-mono text-sm text-accent">
+            Observe. Cache. Measure. Optimize.
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+            CacheForge
+          </h1>
+          <p className="max-w-2xl text-lg leading-8 text-muted">
+            A production-style API performance lab for understanding database
+            latency, Redis caching, and measurable performance improvements —
+            against a real PostgreSQL database and a real Redis instance, not a
+            simulation.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href="/dashboard">Open Dashboard</Link>
+            </Button>
+            <Button asChild variant="secondary" size="lg">
+              <Link href="/architecture">Explore Architecture</Link>
+            </Button>
+          </div>
+        </div>
+        <div
+          aria-hidden="true"
+          className="hidden shrink-0 rounded-xl border border-border bg-surface/50 p-5 lg:block"
+        >
+          <SystemDiagram />
         </div>
       </section>
 
@@ -101,25 +113,9 @@ export default function Home() {
             makes both the cost and the fix visible and measurable.
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2">
-          <FlowDiagram
-            title="Without caching"
-            steps={[
-              { label: "Client" },
-              { label: "API" },
-              { label: "PostgreSQL" },
-            ]}
-          />
-          <FlowDiagram
-            title="With cache-aside"
-            tone="accent"
-            steps={[
-              { label: "Client" },
-              { label: "API" },
-              { label: "Redis" },
-              { label: "PostgreSQL", detail: "on cache miss" },
-            ]}
-          />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <WithoutCachingDiagram />
+          <WithCacheAsideDiagram />
         </div>
       </section>
 
@@ -148,7 +144,7 @@ export default function Home() {
           {CAPABILITIES.map((capability) => (
             <div
               key={capability.title}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-5"
+              className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-5 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm"
             >
               <capability.icon
                 aria-hidden="true"

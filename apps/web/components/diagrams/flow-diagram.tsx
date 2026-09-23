@@ -23,7 +23,7 @@ export function FlowDiagram({
       </p>
       <div
         role="list"
-        className="flex flex-col items-stretch gap-0 sm:flex-row sm:items-center"
+        className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-y-3"
       >
         {steps.map((step, index) => (
           <div
@@ -33,7 +33,7 @@ export function FlowDiagram({
             <div
               role="listitem"
               className={cn(
-                "flex min-w-40 flex-col items-center gap-0.5 rounded-lg border px-4 py-3 text-center",
+                "flex min-w-28 max-w-48 flex-col items-center gap-0.5 rounded-lg border px-4 py-3 text-center",
                 tone === "accent"
                   ? "border-accent/30 bg-accent/5"
                   : "border-border bg-surface",

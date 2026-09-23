@@ -2,10 +2,12 @@
 
 /*
  * Dark-first: CacheForge is a developer/infra tool (PROJECT_SPEC.md §13),
- * so the unqualified :root palette IS the dark palette. A
- * prefers-color-scheme: light override is kept for the minority of
- * visitors on a light-mode system, rather than building a toggle that
- * wasn't requested.
+ * so the unqualified :root palette IS the dark palette. Light mode is an
+ * explicit, user-selected override applied via `[data-theme="light"]` —
+ * set on <html> by the inline theme-init script in app/layout.tsx
+ * (before paint, from localStorage or the OS preference) and toggled at
+ * runtime by lib/theme/theme-provider.tsx. The prefers-color-scheme
+ * fallback below only matters with JavaScript disabled.
  */
 :root {
   --background: #0a0a0b;
@@ -27,6 +29,30 @@
   --status-neutral: #9a9aa2;
   --status-neutral-foreground: #18181b;
   --focus-ring: #2dd4bf;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --background: #fafafa;
+  --foreground: #131316;
+  --surface: #ffffff;
+  --surface-raised: #f4f4f5;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --muted: #52525b;
+  --muted-foreground: #71717a;
+  --accent: #0d9488;
+  --accent-foreground: #f0fdfa;
+  --status-hit: #16a34a;
+  --status-hit-foreground: #f0fdf4;
+  --status-miss: #d97706;
+  --status-miss-foreground: #fffbeb;
+  --status-down: #dc2626;
+  --status-down-foreground: #fef2f2;
+  --status-neutral: #71717a;
+  --status-neutral-foreground: #fafafa;
+  --focus-ring: #0d9488;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -54,7 +80,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --background: #fafafa;
     --foreground: #131316;
     --surface: #ffffff;
@@ -74,6 +100,7 @@
     --status-neutral: #71717a;
     --status-neutral-foreground: #fafafa;
     --focus-ring: #0d9488;
+    color-scheme: light;
   }
 }
 
@@ -81,6 +108,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 * {
