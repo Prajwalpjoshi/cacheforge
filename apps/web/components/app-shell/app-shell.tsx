@@ -17,8 +17,12 @@ import { version as appVersion } from "../../package.json";
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col md:flex-row">
-      <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
+    // h-svh + overflow-hidden locks this shell to exactly one viewport
+    // tall (svh, not vh, so mobile browser chrome can't hide content
+    // below it) — the page itself never scrolls. `main` below is the
+    // one scroll container, so `aside` never needs to move or stick.
+    <div className="flex h-svh flex-col overflow-hidden md:flex-row">
+      <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <Link
           href="/"
           className="flex items-center gap-2.5 border-b border-border px-5 py-4 font-mono text-sm font-semibold tracking-tight text-foreground"
@@ -42,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 md:hidden">
           <Link
             href="/"
@@ -60,7 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
