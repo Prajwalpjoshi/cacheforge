@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Activity,
+  ArrowRight,
   ArrowRightLeft,
   Gauge,
   Radio,
@@ -12,27 +13,7 @@ import {
   WithoutCachingDiagram,
   WithCacheAsideDiagram,
 } from "@/components/diagrams/cache-aside-comparison";
-import { PerformancePreview } from "@/components/marketing/performance-preview";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
-
-const PILLARS = [
-  {
-    title: "Observe",
-    body: "Every request is measured — method, route, status, latency, and whether it was served from Postgres or Redis.",
-  },
-  {
-    title: "Cache",
-    body: "A cache-aside layer in front of PostgreSQL, with TTLs, tag-based invalidation, and an explorable key namespace.",
-  },
-  {
-    title: "Measure",
-    body: "A Performance Lab runs real, in-process benchmarks and reports P50/P95/P99 and throughput — no fabricated numbers.",
-  },
-  {
-    title: "Optimize",
-    body: "Rate limiting, pub/sub, and graceful degradation when Redis is unavailable, all observable from the dashboard.",
-  },
-];
 
 const CAPABILITIES = [
   {
@@ -72,11 +53,12 @@ export default function Home() {
     <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-14 px-6 py-10 sm:py-12">
       <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
         <div className="flex flex-col gap-5">
-          <p className="font-mono text-sm text-accent">
+          <p className="font-mono text-sm uppercase text-accent">
             Observe. Cache. Measure. Optimize.
           </p>
           <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            CacheForge
+            <span className="text-foreground">Cache</span>
+            <span className="text-accent">Forge</span>
           </h1>
           <p className="max-w-[620px] text-base leading-7 text-muted sm:text-lg sm:leading-8">
             A production-style API performance lab for understanding database
@@ -86,14 +68,23 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href="/dashboard">Open Dashboard</Link>
+              <Link href="/dashboard">
+                Open Dashboard
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </Button>
             <Button asChild variant="secondary" size="lg">
-              <Link href="/architecture">Explore Architecture</Link>
+              <Link href="/architecture">
+                Explore Architecture
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </Button>
           </div>
         </div>
-        <div aria-hidden="true" className="relative hidden shrink-0 lg:block">
+        <div
+          aria-hidden="true"
+          className="relative mx-auto w-full max-w-xs shrink-0 sm:max-w-sm lg:mx-0 lg:w-auto lg:max-w-none"
+        >
           <div className="absolute inset-0 -z-10 rounded-full bg-accent/10 blur-3xl" />
           <SystemDiagram compact />
         </div>
@@ -101,7 +92,7 @@ export default function Home() {
 
       <section className="flex flex-col gap-6">
         <div className="max-w-2xl space-y-2">
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Repeated database access is the tax you don&apos;t see
           </h2>
           <p className="text-sm leading-6 text-muted">
@@ -117,28 +108,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        aria-label="How CacheForge is built"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-      >
-        {PILLARS.map((pillar) => (
-          <div
-            key={pillar.title}
-            className="rounded-lg border border-border bg-surface p-5"
-          >
-            <h2 className="font-mono text-sm font-semibold text-accent">
-              {pillar.title}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted">{pillar.body}</p>
-          </div>
-        ))}
-      </section>
-
       <section className="flex flex-col gap-5">
         <h2 className="text-xl font-semibold text-foreground">
           What&apos;s actually implemented
         </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {CAPABILITIES.map((capability) => (
             <div
               key={capability.title}
@@ -156,28 +130,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold text-foreground">
-          Real, measured performance
-        </h2>
-        <PerformancePreview />
-      </section>
-
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-6">
-        <h2 className="text-xl font-semibold text-foreground">Architecture</h2>
-        <p className="max-w-2xl text-sm leading-6 text-muted">
-          Next.js talks only to the Fastify API; the API is the only thing that
-          talks to PostgreSQL and Redis. Routes stay thin, services hold the
-          cache-aside and benchmark logic, and repositories are the only layer
-          that touches Prisma.
-        </p>
-        <div>
-          <Button asChild variant="secondary" size="sm">
-            <Link href="/architecture">View full architecture</Link>
-          </Button>
-        </div>
-      </section>
-
       <section className="flex flex-col items-start justify-between gap-4 rounded-lg border border-status-hit/20 bg-status-hit/5 p-6 sm:flex-row sm:items-center sm:p-8">
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold text-foreground">
@@ -188,7 +140,10 @@ export default function Home() {
           </p>
         </div>
         <Button asChild size="lg">
-          <Link href="/dashboard">Open Dashboard</Link>
+          <Link href="/dashboard">
+            Open Dashboard
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
         </Button>
       </section>
     </div>

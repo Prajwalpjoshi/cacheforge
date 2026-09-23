@@ -69,8 +69,8 @@ export function WithoutCachingDiagram() {
           aria-hidden="true"
           className="size-4 shrink-0 text-status-down"
         />
-        <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-          Without caching
+        <p className="text-base font-semibold text-foreground">
+          Without Caching
         </p>
       </div>
 
@@ -95,8 +95,8 @@ export function WithCacheAsideDiagram() {
           aria-hidden="true"
           className="size-4 shrink-0 text-status-hit"
         />
-        <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-          With cache-aside
+        <p className="text-base font-semibold text-foreground">
+          With Cache-Aside
         </p>
       </div>
 

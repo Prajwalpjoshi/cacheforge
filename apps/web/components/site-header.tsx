@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -15,9 +16,10 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-3.5">
         <Link
           href="/"
-          className="font-mono text-sm font-semibold tracking-tight text-foreground"
+          className="font-mono text-sm font-semibold tracking-tight"
         >
-          CacheForge
+          <span className="text-foreground">Cache</span>
+          <span className="text-accent">Forge</span>
         </Link>
         <nav
           aria-label="Primary"
@@ -37,7 +39,10 @@ export function SiteHeader() {
           </ul>
           <ThemeToggle />
           <Button asChild size="sm">
-            <Link href="/dashboard">Open Dashboard</Link>
+            <Link href="/dashboard">
+              Open Dashboard
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </nav>
       </div>
