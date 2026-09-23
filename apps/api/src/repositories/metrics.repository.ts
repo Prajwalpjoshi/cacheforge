@@ -34,14 +34,28 @@ export interface RouteMetricsRow {
 }
 
 export interface ListRequestMetricsParams {
-  limit: number;
+  page: number;
+  pageSize: number;
   windowMinutes?: number;
   route?: string;
+  search?: string;
   method?: string;
   cacheStatus?: CacheStatus;
+  statusClass?: "2xx" | "4xx" | "5xx";
   source?: DataSource;
   requestId?: string;
 }
+
+export interface ListRequestMetricsResult {
+  items: RequestMetric[];
+  total: number;
+}
+
+const STATUS_CLASS_RANGES: Record<"2xx" | "4xx" | "5xx", [number, number]> = {
+  "2xx": [200, 300],
+  "4xx": [400, 500],
+  "5xx": [500, 600],
+};
 
 interface SummaryQueryRow {
   request_count: bigint;
@@ -123,7 +137,9 @@ export function createMetricsRepository(prisma: PrismaClient) {
       }));
     },
 
-    async list(params: ListRequestMetricsParams): Promise<RequestMetric[]> {
+    async list(
+      params: ListRequestMetricsParams,
+    ): Promise<ListRequestMetricsResult> {
       const where: Record<string, unknown> = {};
 
       if (params.windowMinutes !== undefined) {
@@ -131,17 +147,41 @@ export function createMetricsRepository(prisma: PrismaClient) {
           gte: new Date(Date.now() - params.windowMinutes * 60_000),
         };
       }
-      if (params.route) where.route = params.route;
+      // `search` (substring, case-insensitive) takes precedence over the
+      // exact-match `route` param when both are somehow given — neither
+      // is backed by an index (no pg_trgm/GIN index on `route`), so this
+      // is a sequential scan under the window/other filters. Acceptable
+      // at this project's data volume; documented here rather than
+      // adding a migration for a UI-focused task (PROJECT_SPEC.md scope).
+      if (params.search) {
+        where.route = { contains: params.search, mode: "insensitive" };
+      } else if (params.route) {
+        where.route = params.route;
+      }
       if (params.method) where.method = params.method;
       if (params.cacheStatus) where.cacheStatus = params.cacheStatus;
+      if (params.statusClass) {
+        const [gte, lt] = STATUS_CLASS_RANGES[params.statusClass];
+        where.statusCode = { gte, lt };
+      }
       if (params.source) where.source = params.source;
       if (params.requestId) where.requestId = params.requestId;
 
-      return prisma.requestMetric.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        take: params.limit,
-      });
+      const [items, total] = await Promise.all([
+        prisma.requestMetric.findMany({
+          where,
+          // createdAt DESC alone isn't strictly deterministic across
+          // requests recorded in the same millisecond; the
+          // autoincrement id breaks ties so pagination never skips or
+          // repeats a row across pages (PROJECT_SPEC.md §12).
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          skip: (params.page - 1) * params.pageSize,
+          take: params.pageSize,
+        }),
+        prisma.requestMetric.count({ where }),
+      ]);
+
+      return { items, total };
     },
   };
 }

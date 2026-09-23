@@ -113,27 +113,35 @@ export function RequestVolumeChart({
   return (
     <>
       {/* Text/table fallback for the chart below (PROJECT_SPEC.md #13/#20) — same data, screen-reader only. */}
-      <table className="sr-only">
-        <caption>Request count, P95 latency, and error rate by route</caption>
-        <thead>
-          <tr>
-            <th scope="col">Route</th>
-            <th scope="col">Requests</th>
-            <th scope="col">P95 latency</th>
-            <th scope="col">Error rate</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((route) => (
-            <tr key={route.axisKey}>
-              <td>{route.fullLabel}</td>
-              <td>{route.requests}</td>
-              <td>{formatMs(route.p95Ms)}</td>
-              <td>{formatPercent(route.errorRate)}</td>
+      {/* The `sr-only` clip goes on this wrapping div rather than the table
+          itself: an auto-layout table's declared width is only a suggested
+          minimum, so a `sr-only`-on-<table> ends up wide enough (sized to
+          fit its cell content) to force a horizontal scrollbar on the whole
+          page. A plain div has no such content-driven sizing, so it clips
+          reliably to 1px regardless of what's inside it. */}
+      <div className="sr-only">
+        <table>
+          <caption>Request count, P95 latency, and error rate by route</caption>
+          <thead>
+            <tr>
+              <th scope="col">Route</th>
+              <th scope="col">Requests</th>
+              <th scope="col">P95 latency</th>
+              <th scope="col">Error rate</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((route) => (
+              <tr key={route.axisKey}>
+                <td>{route.fullLabel}</td>
+                <td>{route.requests}</td>
+                <td>{formatMs(route.p95Ms)}</td>
+                <td>{formatPercent(route.errorRate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart
           data={data}

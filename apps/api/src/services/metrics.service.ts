@@ -2,6 +2,7 @@ import type {
   MetricsSummaryResponse,
   RequestMetricDTO,
   RequestMetricsQuery,
+  RequestMetricsResponse,
 } from "@cacheforge/contracts";
 import type { RequestMetric } from "../generated/prisma/client.js";
 import type {
@@ -66,9 +67,14 @@ export function createMetricsService(repository: MetricsRepository) {
 
     async listRequests(
       query: RequestMetricsQuery,
-    ): Promise<RequestMetricDTO[]> {
-      const rows = await repository.list(query);
-      return rows.map(toRequestMetricDTO);
+    ): Promise<RequestMetricsResponse> {
+      const { items, total } = await repository.list(query);
+      return {
+        items: items.map(toRequestMetricDTO),
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+      };
     },
   };
 }

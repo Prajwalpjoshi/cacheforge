@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Activity, BarChart3, ListChecks, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,18 +15,22 @@ import { TimeWindowSelector } from "./time-window-selector";
 import { KpiTiles } from "./kpi-tiles";
 import { RequestVolumeChart } from "./request-volume-chart";
 import { LatencyTrendChart } from "./latency-trend-chart";
-import { RecentRequestsTable } from "./recent-requests-table";
+import { RecentRequestsPanel } from "./recent-requests-panel";
 
-const REQUEST_LIMIT = 100;
+/** Unfiltered "most recent N" fetch backing only the latency chart — independent of whatever page/filters the Recent Requests table below is showing (see RecentRequestsPanel). */
+const CHART_REQUEST_SAMPLE_SIZE = 100;
 
 export function DashboardView() {
   const [windowMinutes, setWindowMinutes] = useState(15);
+  const queryClient = useQueryClient();
 
   const summaryQuery = useMetricsSummary(windowMinutes);
-  const requestsQuery = useRequestMetrics(REQUEST_LIMIT);
+  const chartRequestsQuery = useRequestMetrics({
+    pageSize: CHART_REQUEST_SAMPLE_SIZE,
+  });
   const healthQuery = useHealth();
 
-  const isLoading = summaryQuery.isPending || requestsQuery.isPending;
+  const isLoading = summaryQuery.isPending || chartRequestsQuery.isPending;
   const lastUpdated = summaryQuery.dataUpdatedAt
     ? new Date(summaryQuery.dataUpdatedAt).toISOString()
     : null;
@@ -34,14 +39,14 @@ export function DashboardView() {
     !summaryQuery.isPending &&
     !summaryQuery.isError &&
     summaryQuery.data.data.byRoute.length > 0;
+  const chartRequests = chartRequestsQuery.data?.data.items ?? [];
   const hasRequestData =
-    !requestsQuery.isPending &&
-    !requestsQuery.isError &&
-    requestsQuery.data.data.length > 0;
+    !chartRequestsQuery.isPending &&
+    !chartRequestsQuery.isError &&
+    chartRequests.length > 0;
 
   function refreshAll() {
-    void summaryQuery.refetch();
-    void requestsQuery.refetch();
+    void queryClient.invalidateQueries({ queryKey: ["metrics"] });
     void healthQuery.refetch();
   }
 
@@ -118,20 +123,20 @@ export function DashboardView() {
             </CardTitle>
             {hasRequestData && (
               <span className="text-xs text-muted">
-                Last {requestsQuery.data.data.length} requests
+                Last {chartRequests.length} requests
               </span>
             )}
           </CardHeader>
           <CardContent>
-            {requestsQuery.isPending ? (
+            {chartRequestsQuery.isPending ? (
               <Skeleton className="h-64 w-full" />
-            ) : requestsQuery.isError ? (
+            ) : chartRequestsQuery.isError ? (
               <ErrorState
                 message="Unable to load recent requests."
-                onRetry={() => void requestsQuery.refetch()}
+                onRetry={() => void chartRequestsQuery.refetch()}
               />
             ) : (
-              <LatencyTrendChart requests={requestsQuery.data.data} />
+              <LatencyTrendChart requests={chartRequests} />
             )}
           </CardContent>
         </Card>
@@ -145,20 +150,7 @@ export function DashboardView() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {requestsQuery.isPending ? (
-            <div className="p-5">
-              <Skeleton className="h-48 w-full" />
-            </div>
-          ) : requestsQuery.isError ? (
-            <div className="p-5">
-              <ErrorState
-                message="Unable to load recent requests."
-                onRetry={() => void requestsQuery.refetch()}
-              />
-            </div>
-          ) : (
-            <RecentRequestsTable requests={requestsQuery.data.data} />
-          )}
+          <RecentRequestsPanel windowMinutes={windowMinutes} />
         </CardContent>
       </Card>
     </div>

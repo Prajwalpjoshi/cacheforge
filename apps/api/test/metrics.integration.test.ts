@@ -24,7 +24,7 @@ async function waitForRequestMetric(
       method: "GET",
       url: `/api/metrics/requests?requestId=${requestId}`,
     });
-    const rows = response.json() as RequestMetricDTO[];
+    const rows = response.json().items as RequestMetricDTO[];
     if (rows.length > 0) {
       return rows[0]!;
     }
@@ -134,7 +134,8 @@ describe("Request metrics persistence and API", () => {
         method: "GET",
         url: `/api/metrics/requests?requestId=${requestId}`,
       });
-      expect(check.json()).toEqual([]);
+      expect(check.json().items).toEqual([]);
+      expect(check.json().total).toBe(0);
     }
   });
 
@@ -228,10 +229,11 @@ describe("Request metrics persistence and API", () => {
 
       const response = await app.inject({
         method: "GET",
-        url: "/api/metrics/requests?method=GET&cacheStatus=MISS&limit=50",
+        url: "/api/metrics/requests?method=GET&cacheStatus=MISS&pageSize=50",
       });
       expect(response.statusCode).toBe(200);
-      const rows = response.json() as RequestMetricDTO[];
+      const body = response.json();
+      const rows = body.items as RequestMetricDTO[];
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         expect(row.method).toBe("GET");
@@ -240,29 +242,187 @@ describe("Request metrics persistence and API", () => {
       expect(rows.some((row) => row.requestId === missRequestId)).toBe(true);
     });
 
-    it("respects the limit parameter", async () => {
+    it("filters by source using real data", async () => {
+      const sku = `${skuPrefix}source`;
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/products",
+        payload: { sku, name: "Widget", category: "metrics", price: 5 },
+      });
+      const { id } = created.json();
+      await app.inject({ method: "GET", url: `/api/products/${id}` }); // MISS, populates cache
+      const hit = await app.inject({
+        method: "GET",
+        url: `/api/products/${id}`,
+      });
+      const hitRequestId = hit.headers["x-request-id"] as string;
+      await waitForRequestMetric(app, hitRequestId);
+
       const response = await app.inject({
         method: "GET",
-        url: "/api/metrics/requests?limit=3",
+        url: "/api/metrics/requests?source=CACHE&pageSize=50",
       });
-      expect(response.statusCode).toBe(200);
-      expect(response.json().length).toBeLessThanOrEqual(3);
+      const rows = response.json().items as RequestMetricDTO[];
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row.source).toBe("CACHE");
+      }
     });
 
-    it("rejects a limit above the max with 400", async () => {
+    it("filters by statusClass using real data", async () => {
+      const notFound = await app.inject({
+        method: "GET",
+        url: "/api/products/clnonexistent0000000statuscls",
+      });
+      const requestId = notFound.headers["x-request-id"] as string;
+      await waitForRequestMetric(app, requestId);
+
       const response = await app.inject({
         method: "GET",
-        url: "/api/metrics/requests?limit=9999",
+        url: "/api/metrics/requests?statusClass=4xx&pageSize=50",
+      });
+      const rows = response.json().items as RequestMetricDTO[];
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row.statusCode).toBeGreaterThanOrEqual(400);
+        expect(row.statusCode).toBeLessThan(500);
+      }
+      expect(rows.some((row) => row.requestId === requestId)).toBe(true);
+
+      const okOnly = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?statusClass=2xx&pageSize=50",
+      });
+      for (const row of okOnly.json().items as RequestMetricDTO[]) {
+        expect(row.statusCode).toBeGreaterThanOrEqual(200);
+        expect(row.statusCode).toBeLessThan(300);
+      }
+    });
+
+    it("searches by a substring of the route, case-insensitively", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?search=PRODUCTS&pageSize=50",
+      });
+      expect(response.statusCode).toBe(200);
+      const rows = response.json().items as RequestMetricDTO[];
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row.route.toLowerCase()).toContain("products");
+      }
+
+      const noMatch = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?search=this-route-does-not-exist",
+      });
+      const noMatchBody = noMatch.json();
+      expect(noMatchBody.items).toEqual([]);
+      expect(noMatchBody.total).toBe(0);
+    });
+
+    it("combines search, method, and statusClass filters", async () => {
+      const notFound = await app.inject({
+        method: "GET",
+        url: "/api/products/clnonexistent0000000combined",
+      });
+      const requestId = notFound.headers["x-request-id"] as string;
+      await waitForRequestMetric(app, requestId);
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?search=products&method=GET&statusClass=4xx&pageSize=50",
+      });
+      const rows = response.json().items as RequestMetricDTO[];
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row.route.toLowerCase()).toContain("products");
+        expect(row.method).toBe("GET");
+        expect(row.statusCode).toBeGreaterThanOrEqual(400);
+        expect(row.statusCode).toBeLessThan(500);
+      }
+    });
+
+    it("paginates: page 1 and page 2 return disjoint rows that together respect the total", async () => {
+      const first = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?page=1&pageSize=5",
+      });
+      const firstBody = first.json();
+      expect(firstBody.page).toBe(1);
+      expect(firstBody.pageSize).toBe(5);
+      expect(firstBody.items.length).toBeLessThanOrEqual(5);
+      expect(firstBody.total).toBeGreaterThan(0);
+
+      if (firstBody.total <= 5) return; // not enough real traffic yet to exercise page 2
+
+      const second = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?page=2&pageSize=5",
+      });
+      const secondBody = second.json();
+      expect(secondBody.page).toBe(2);
+      expect(secondBody.total).toBe(firstBody.total);
+
+      const firstIds = new Set(
+        (firstBody.items as RequestMetricDTO[]).map((row) => row.id),
+      );
+      for (const row of secondBody.items as RequestMetricDTO[]) {
+        expect(firstIds.has(row.id)).toBe(false);
+      }
+    });
+
+    it("respects the pageSize parameter", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?pageSize=3",
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.pageSize).toBe(3);
+      expect(body.items.length).toBeLessThanOrEqual(3);
+    });
+
+    it("rejects a pageSize above the max with 400", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?pageSize=9999",
       });
       expect(response.statusCode).toBe(400);
+    });
+
+    it("rejects page=0 with 400", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?page=0",
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it("rejects an invalid statusClass with 400", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?statusClass=3xx",
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it("returns an empty page (not an error) past the last page", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/metrics/requests?search=this-route-does-not-exist&page=5&pageSize=10",
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.items).toEqual([]);
+      expect(body.total).toBe(0);
     });
 
     it("returns newest-first ordering", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/metrics/requests?limit=10",
+        url: "/api/metrics/requests?pageSize=10",
       });
-      const rows = response.json() as RequestMetricDTO[];
+      const rows = response.json().items as RequestMetricDTO[];
       const timestamps = rows.map((row) => new Date(row.createdAt).getTime());
       const sorted = [...timestamps].sort((a, b) => b - a);
       expect(timestamps).toEqual(sorted);

@@ -2,8 +2,8 @@ import {
   metricsSummaryResponseSchema,
   requestMetricsResponseSchema,
   type MetricsSummaryResponse,
-  type RequestMetricDTO,
   type RequestMetricsQuery,
+  type RequestMetricsResponse,
 } from "@cacheforge/contracts";
 import { apiRequest, type ApiResult } from "./client";
 
@@ -17,7 +17,7 @@ export async function getMetricsSummary(
 
 export async function listRequestMetrics(
   query: Partial<RequestMetricsQuery> = {},
-): Promise<ApiResult<RequestMetricDTO[]>> {
+): Promise<ApiResult<RequestMetricsResponse>> {
   return apiRequest("/api/metrics/requests", requestMetricsResponseSchema, {
     query,
   });

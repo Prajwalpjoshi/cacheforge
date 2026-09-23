@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { EmptyState } from "@/components/ui/empty-state";
 import { formatClockTime, formatMs } from "@/lib/format";
 import {
   describeCacheStatus,
@@ -17,20 +16,12 @@ import {
   describeHttpStatus,
 } from "@/lib/status";
 
+/** Pure presentation — RecentRequestsPanel owns loading/empty/error state and only renders this once `requests` is a non-empty page. */
 export function RecentRequestsTable({
   requests,
 }: {
   requests: RequestMetricDTO[];
 }) {
-  if (requests.length === 0) {
-    return (
-      <EmptyState
-        title="No traffic yet"
-        description="Try the API Explorer to generate real requests, then come back here."
-      />
-    );
-  }
-
   return (
     <TableContainer>
       <Table>

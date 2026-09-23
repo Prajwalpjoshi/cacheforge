@@ -392,10 +392,10 @@ Base path: `/api`. All request/response bodies validated with Zod; the same sche
 - **Caching:** none (must reflect current state); the query itself is indexed and cheap at this data volume.
 
 ### `GET /api/metrics/requests`
-- **Purpose:** recent raw request log for a live feed/table.
-- **Request (query):** `limit?: number=50 (max 200)`
-- **Response 200:** `RequestMetric[]`, newest first.
-- **Caching:** none.
+- **Purpose:** paginated, filterable, searchable request log for a live feed/table (the Overview Dashboard's Recent Requests table) and for the Recent-latency-by-cache-status chart's unfiltered "most recent N" sample.
+- **Request (query):** `page?: number=1, pageSize?: number=50 (max 200), windowMinutes?: number, route?: string, search?: string (substring of route, case-insensitive), method?: GET|POST|PUT|PATCH|DELETE, cacheStatus?: HIT|MISS|BYPASS|NOT_APPLICABLE, statusClass?: 2xx|4xx|5xx, source?: DB|CACHE, requestId?: string`
+- **Response 200:** `{ items: RequestMetric[], page, pageSize, total }`, newest first (same pagination envelope as `GET /api/products`); ties broken by `id DESC` for deterministic paging.
+- **Caching:** none (must reflect current state). `search`/`statusClass` are sequential scans under whatever other filters narrow the row set first — no `pg_trgm`/index added for this at current data volume; revisit if the table grows large enough for it to matter.
 
 ### `POST /api/benchmarks/run`
 - **Purpose:** execute a controlled benchmark and persist the result (see §11).

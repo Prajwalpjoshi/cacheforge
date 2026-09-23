@@ -143,17 +143,24 @@ export const ENDPOINTS: EndpointDefinition[] = [
     group: "Metrics",
     method: "GET",
     path: "/api/metrics/requests",
-    description: "Recent individual request records, newest first.",
+    description:
+      "Paginated, filterable request log, newest first. Returns { items, page, pageSize, total }.",
     pathParams: [],
     query: [
       {
-        name: "limit",
+        name: "page",
+        kind: "number",
+        defaultValue: "1",
+      },
+      {
+        name: "pageSize",
         kind: "number",
         defaultValue: "50",
         description: "max 200",
       },
       { name: "windowMinutes", kind: "number" },
       { name: "route", kind: "string" },
+      { name: "search", kind: "string", description: "substring of route" },
       {
         name: "method",
         kind: "select",
@@ -163,6 +170,11 @@ export const ENDPOINTS: EndpointDefinition[] = [
         name: "cacheStatus",
         kind: "select",
         options: ["HIT", "MISS", "BYPASS", "NOT_APPLICABLE"],
+      },
+      {
+        name: "statusClass",
+        kind: "select",
+        options: ["2xx", "4xx", "5xx"],
       },
       { name: "source", kind: "select", options: ["DB", "CACHE"] },
       { name: "requestId", kind: "string" },
