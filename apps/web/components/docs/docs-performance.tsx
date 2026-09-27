@@ -244,19 +244,45 @@ export function DocsPerformance() {
           ]}
         />
 
-        <SourceSection
-          title="Comparison"
-          items={[
-            <>
-              Runs{" "}
-              <strong className="text-foreground">
-                DB_ONLY vs CACHE_ONLY
-              </strong>
-              .
-            </>,
-            <>Compares latency and throughput.</>,
-          ]}
-        />
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Comparison</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableHeaderCell>Main Difference</TableHeaderCell>
+                    <TableHeaderCell>DB_ONLY</TableHeaderCell>
+                    <TableHeaderCell>CACHE_ONLY</TableHeaderCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Data source</TableCell>
+                    <TableCell>PostgreSQL</TableCell>
+                    <TableCell>Redis cache</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Uses cache</TableCell>
+                    <TableCell>No</TableCell>
+                    <TableCell>Yes</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Request pattern</TableCell>
+                    <TableCell>Always reads PostgreSQL directly</TableCell>
+                    <TableCell>First request MISS, later requests HIT</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Compares</TableCell>
+                    <TableCell colSpan={2}>Latency and throughput</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
 
         <SourceSection
           title="Percentiles"
