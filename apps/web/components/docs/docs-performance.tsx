@@ -118,14 +118,29 @@ export function DocsPerformance() {
               </TableHead>
               <TableBody>
                 <TableRow>
+                  <TableCell>Min</TableCell>
+                  <TableCell>1.91 ms</TableCell>
+                  <TableCell>1.30 ms</TableCell>
+                </TableRow>
+                <TableRow>
                   <TableCell>Average</TableCell>
                   <TableCell>2.54 ms</TableCell>
                   <TableCell>1.69 ms</TableCell>
                 </TableRow>
                 <TableRow>
+                  <TableCell>P50</TableCell>
+                  <TableCell>2.50 ms</TableCell>
+                  <TableCell>1.43 ms</TableCell>
+                </TableRow>
+                <TableRow>
                   <TableCell>P95</TableCell>
                   <TableCell>3.49 ms</TableCell>
                   <TableCell>2.19 ms</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>P99</TableCell>
+                  <TableCell>3.49 ms</TableCell>
+                  <TableCell>6.72 ms</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Throughput</TableCell>
