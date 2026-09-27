@@ -5,6 +5,9 @@ import { DOC_SECTIONS, readDocSection } from "@/lib/docs";
 import { DocsExplorer } from "@/components/docs/docs-explorer";
 import { DocsGettingStarted } from "@/components/docs/docs-getting-started";
 import { DocsArchitecture } from "@/components/docs/docs-architecture";
+import { DocsCaching } from "@/components/docs/docs-caching";
+import { DocsPerformance } from "@/components/docs/docs-performance";
+import { DocsDecisions } from "@/components/docs/docs-decisions";
 import { MarkdownContent } from "@/components/docs/markdown-content";
 
 export const metadata: Metadata = {
@@ -40,6 +43,12 @@ export default async function DocsPage({
         <DocsGettingStarted />
       ) : activeSlug === "architecture" ? (
         <DocsArchitecture content={content} />
+      ) : activeSlug === "caching" ? (
+        <DocsCaching content={content} />
+      ) : activeSlug === "performance" ? (
+        <DocsPerformance content={content} />
+      ) : activeSlug === "decisions" ? (
+        <DocsDecisions content={content} />
       ) : (
         <Card>
           <CardContent>

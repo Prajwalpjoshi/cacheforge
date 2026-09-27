@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ActivitySquare, ArrowRight, Boxes, Database, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/table";
 import { DOC_SECTIONS } from "@/lib/docs";
 import { DocsVisualGuide } from "@/components/docs/docs-visual-guide";
+
+const QUICK_START_STEPS = [
+  { step: "1", title: "Install", command: "pnpm install" },
+  { step: "2", title: "Start services", command: "docker compose up -d" },
+  { step: "3", title: "Start the app", command: "pnpm dev" },
+  { step: "4", title: "Open the dashboard", command: "http://localhost:3000" },
+];
 
 const HERO_HIGHLIGHTS = [
   {
@@ -97,6 +104,32 @@ export function DocsGettingStarted() {
       </Card>
 
       <DocsVisualGuide />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick start</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {QUICK_START_STEPS.map((item) => (
+              <div
+                key={item.step}
+                className="flex flex-col gap-2 rounded-lg border border-border bg-surface-raised/40 p-3"
+              >
+                <span className="flex size-6 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
+                  {item.step}
+                </span>
+                <p className="text-sm font-semibold text-foreground">
+                  {item.title}
+                </p>
+                <code className="w-fit rounded bg-surface-raised px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                  {item.command}
+                </code>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-status-hit/20 bg-status-hit/5">
         <CardContent className="p-6">
