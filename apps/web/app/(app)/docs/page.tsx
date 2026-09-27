@@ -4,6 +4,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { DOC_SECTIONS, readDocSection } from "@/lib/docs";
 import { DocsExplorer } from "@/components/docs/docs-explorer";
 import { DocsGettingStarted } from "@/components/docs/docs-getting-started";
+import { DocsArchitecture } from "@/components/docs/docs-architecture";
 import { MarkdownContent } from "@/components/docs/markdown-content";
 
 export const metadata: Metadata = {
@@ -37,6 +38,8 @@ export default async function DocsPage({
         </Card>
       ) : activeSlug === "getting-started" ? (
         <DocsGettingStarted />
+      ) : activeSlug === "architecture" ? (
+        <DocsArchitecture content={content} />
       ) : (
         <Card>
           <CardContent>

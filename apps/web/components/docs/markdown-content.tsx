@@ -50,7 +50,7 @@ const COMPONENTS: Components = {
       <code className={`${className} font-mono text-xs`} {...props} />
     ) : (
       <code
-        className="rounded bg-surface-raised px-1 py-0.5 font-mono text-xs text-foreground"
+        className="break-words rounded bg-surface-raised px-1 py-0.5 font-mono text-xs text-foreground"
         {...props}
       />
     ),
