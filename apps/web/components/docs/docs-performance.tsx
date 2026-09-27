@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ActivitySquare, Gauge, LineChart } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -20,7 +21,6 @@ import { BenchmarkFlowDiagram } from "@/components/architecture/benchmark-flow-d
 import { ObservabilityFlowDiagram } from "@/components/architecture/observability-flow-diagram";
 import { Term } from "@/components/architecture/term";
 import { TechnicalDetails } from "@/components/docs/technical-details";
-import { MarkdownContent } from "@/components/docs/markdown-content";
 
 const METRIC_CARDS: { icon: LucideIcon; title: string; detail: string }[] = [
   {
@@ -41,13 +41,14 @@ const METRIC_CARDS: { icon: LucideIcon; title: string; detail: string }[] = [
 ];
 
 /**
- * A progressive read of docs/performance.md — reuses BenchmarkFlowDiagram
- * and ObservabilityFlowDiagram (already built for /architecture) and
- * quotes the one real, reproducible benchmark run the file documents. The
- * table below is exactly docs/performance.md's "A real measured run"
- * table; nothing here is a fabricated or rounded-for-effect number.
+ * A progressive read of docs/performance.md, following the same pattern as
+ * DocsArchitecture and DocsCaching: plain-English explanation and diagrams
+ * first — reusing BenchmarkFlowDiagram and ObservabilityFlowDiagram
+ * (already built for /architecture) — then a concise summary in place of
+ * the full raw markdown file. Every fact, including the one real benchmark
+ * run, is drawn from docs/performance.md; nothing here invents a number.
  */
-export function DocsPerformance({ content }: { content: string }) {
+export function DocsPerformance() {
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -187,15 +188,206 @@ export function DocsPerformance({ content }: { content: string }) {
           Full source-of-truth documentation
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Every fact above comes from this file — including exactly how
-          throughput, concurrency, and persistence work.
+          A concise summary of every benchmark concept — the diagrams and
+          measured results above are the deep reference.
         </p>
       </div>
-      <Card>
-        <CardContent>
-          <MarkdownContent content={content} />
-        </CardContent>
-      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SourceSection
+          title="Definition"
+          items={[
+            <>
+              Measures{" "}
+              <strong className="text-foreground">
+                database vs cache performance
+              </strong>
+              .
+            </>,
+            <>Uses the real API service/repository code.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="What is Measured?"
+          items={[
+            <>
+              Measures <strong className="text-foreground">latency</strong>{" "}
+              and <strong className="text-foreground">throughput</strong>.
+            </>,
+            <>Runs inside the API process.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="DB_ONLY"
+          items={[
+            <>
+              Reads data directly from{" "}
+              <strong className="text-foreground">PostgreSQL</strong>.
+            </>,
+            <>Does not use Redis cache.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="CACHE_ONLY"
+          items={[
+            <>
+              Reads data using the{" "}
+              <strong className="text-foreground">Redis cache</strong>.
+            </>,
+            <>
+              First request is a <strong className="text-foreground">MISS</strong>,
+              later requests are <strong className="text-foreground">HITs</strong>.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Comparison"
+          items={[
+            <>
+              Runs{" "}
+              <strong className="text-foreground">
+                DB_ONLY vs CACHE_ONLY
+              </strong>
+              .
+            </>,
+            <>Compares latency and throughput.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Percentiles"
+          items={[
+            <>
+              Measures{" "}
+              <strong className="text-foreground">P50, P95, and P99</strong>{" "}
+              latency.
+            </>,
+            <>Uses the actual recorded latency values.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Throughput"
+          items={[
+            <>
+              Measures how many{" "}
+              <strong className="text-foreground">
+                requests per second (req/s)
+              </strong>{" "}
+              can be processed.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Concurrency"
+          items={[
+            <>Controls how many requests run at the same time.</>,
+            <>
+              Maximum concurrency is{" "}
+              <strong className="text-foreground">20</strong>.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Benchmark Isolation"
+          items={[
+            <>
+              Benchmarks only{" "}
+              <strong className="text-foreground">read data</strong>.
+            </>,
+            <>It does not create, update, or delete products.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Persistence"
+          items={[
+            <>
+              Completed benchmark results are saved in{" "}
+              <strong className="text-foreground">PostgreSQL</strong>.
+            </>,
+            <>Failed benchmarks are not saved.</>,
+          ]}
+        />
+
+        <SourceSection
+          className="md:col-span-2"
+          title="Real Measured Result"
+          items={[
+            <>
+              DB average: <strong className="text-foreground">2.54 ms</strong>
+            </>,
+            <>
+              Cache average:{" "}
+              <strong className="text-foreground">1.69 ms</strong>
+            </>,
+            <>
+              DB throughput:{" "}
+              <strong className="text-foreground">393 req/s</strong>
+            </>,
+            <>
+              Cache throughput:{" "}
+              <strong className="text-foreground">589 req/s</strong>
+            </>,
+            <>
+              Cache hit rate:{" "}
+              <strong className="text-foreground">96.7%</strong>
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          className="md:col-span-2"
+          title="Limitation"
+          items={[
+            <>
+              Results depend on the{" "}
+              <strong className="text-foreground">
+                machine, Docker resources, database size, and test
+                configuration
+              </strong>
+              .
+            </>,
+            <>
+              These results are{" "}
+              <strong className="text-foreground">local measurements</strong>,
+              not production guarantees.
+            </>,
+          ]}
+        />
+      </div>
     </div>
+  );
+}
+
+/** One card in the Performance tab's concise closing summary, replacing what used to be the full raw markdown file. */
+function SourceSection({
+  title,
+  items,
+  className,
+}: {
+  title: ReactNode;
+  items: ReactNode[];
+  className?: string;
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted">
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
