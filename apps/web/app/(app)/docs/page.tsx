@@ -42,7 +42,7 @@ export default async function DocsPage({
       ) : activeSlug === "getting-started" ? (
         <DocsGettingStarted />
       ) : activeSlug === "architecture" ? (
-        <DocsArchitecture content={content} />
+        <DocsArchitecture />
       ) : activeSlug === "caching" ? (
         <DocsCaching content={content} />
       ) : activeSlug === "performance" ? (

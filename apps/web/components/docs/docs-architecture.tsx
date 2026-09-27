@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -21,18 +22,17 @@ import { ContractValidationDiagram } from "@/components/architecture/contract-va
 import { EngineeringBoundaries } from "@/components/architecture/engineering-boundaries";
 import { WriteInvalidationDiagram } from "@/components/docs/write-invalidation-diagram";
 import { TechnicalDetails } from "@/components/docs/technical-details";
-import { MarkdownContent } from "@/components/docs/markdown-content";
 
 /**
  * A progressive read of docs/architecture.md: plain-English explanation
  * first, diagram second, deep implementation facts last (collapsed behind
- * "Implementation details"), then the full unedited markdown file as the
- * source of truth. Every fact — including every "why" statement — is
- * drawn from docs/architecture.md, docs/caching.md, and docs/performance.md;
- * nothing here invents a number, a component, or a behavior those files
- * don't already describe.
+ * "Implementation details"), then a concise per-layer summary in place of
+ * the full raw markdown file. Every fact — including every "why" statement
+ * — is drawn from docs/architecture.md, docs/caching.md, and
+ * docs/performance.md; nothing here invents a number, a component, or a
+ * behavior those files don't already describe.
  */
-export function DocsArchitecture({ content }: { content: string }) {
+export function DocsArchitecture() {
   return (
     <div className="flex flex-col gap-6">
       <StatusCallout />
@@ -521,19 +521,161 @@ export function DocsArchitecture({ content }: { content: string }) {
           Full source-of-truth documentation
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Every fact above comes from this file. Expand any{" "}
-          <span className="font-medium text-foreground">
-            Implementation details
-          </span>{" "}
-          panel for exact file paths and edge cases, or read the complete
-          write-up below.
+          A concise summary of every layer — the diagrams and
+          &quot;Implementation details&quot; panels above are the deep
+          reference.
         </p>
       </div>
-      <Card>
-        <CardContent>
-          <MarkdownContent content={content} />
-        </CardContent>
-      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SourceSection
+          title="Data Layer"
+          items={[
+            <>
+              <strong className="text-foreground">Prisma</strong> manages the
+              database models.
+            </>,
+            <>
+              <strong className="text-foreground">PostgreSQL</strong> stores
+              Products, Request Metrics, and Benchmark Runs.
+            </>,
+            <>
+              Repositories are the{" "}
+              <strong className="text-foreground">only layer</strong> that
+              directly uses Prisma.
+            </>,
+            <>Services handle database errors and convert them into API errors.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Cache Layer"
+          items={[
+            <>
+              <strong className="text-foreground">Redis</strong> is used for
+              caching, rate limiting, and Pub/Sub.
+            </>,
+            <>
+              <InlineCode>cache-kit</InlineCode> provides cache and Redis
+              functions.
+            </>,
+            <>
+              Product reads use{" "}
+              <strong className="text-foreground">cache-aside</strong>.
+            </>,
+            <>Product changes clear the cache and publish an event.</>,
+            <>
+              Redis is optional; the API can continue using PostgreSQL if
+              Redis is unavailable.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Observability Pipeline"
+          items={[
+            <>
+              Tracks{" "}
+              <strong className="text-foreground">every API request</strong>.
+            </>,
+            <>Records request time, logs, and metrics.</>,
+            <>Metrics are stored in PostgreSQL.</>,
+            <>
+              Monitoring routes are excluded to avoid unnecessary monitoring
+              data.
+            </>,
+            <>Metrics are processed in PostgreSQL instead of JavaScript.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Performance Lab / Benchmark Engine"
+          items={[
+            <>
+              Measures{" "}
+              <strong className="text-foreground">
+                database vs cache performance
+              </strong>
+              .
+            </>,
+            <>
+              <InlineCode>DB_ONLY</InlineCode> → uses PostgreSQL directly.
+            </>,
+            <>
+              <InlineCode>CACHE_ONLY</InlineCode> → uses the real Redis cache.
+            </>,
+            <>
+              <InlineCode>COMPARISON</InlineCode> → runs both and compares
+              results.
+            </>,
+            <>Completed benchmark results are saved in PostgreSQL.</>,
+          ]}
+        />
+
+        <SourceSection
+          className="md:col-span-2"
+          title={
+            <>
+              Frontend (<InlineCode>apps/web</InlineCode>)
+            </>
+          }
+          items={[
+            <>
+              Built with{" "}
+              <strong className="text-foreground">Next.js App Router</strong>.
+            </>,
+            <>
+              Main pages include Dashboard, Performance Lab, Cache Explorer,
+              API Explorer, Health, Architecture, and Documentation.
+            </>,
+            <>
+              API calls are handled through <InlineCode>lib/api</InlineCode>.
+            </>,
+            <>
+              <strong className="text-foreground">TanStack Query</strong>{" "}
+              manages data fetching and polling.
+            </>,
+            <>
+              Frontend uses real API data; it does not use fake/simulated
+              data.
+            </>,
+          ]}
+        />
+      </div>
     </div>
+  );
+}
+
+function InlineCode({ children }: { children: ReactNode }) {
+  return (
+    <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[11px] text-foreground">
+      {children}
+    </code>
+  );
+}
+
+/** One card in the Architecture tab's concise closing summary — a plain-language recap per layer, replacing what used to be the full raw markdown file. */
+function SourceSection({
+  title,
+  items,
+  className,
+}: {
+  title: ReactNode;
+  items: ReactNode[];
+  className?: string;
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted">
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
