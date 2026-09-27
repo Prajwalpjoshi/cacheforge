@@ -140,3 +140,27 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Subtle flow-direction pulse for the Documentation page's diagrams
+ * (SystemDiagram's `animated` prop). Opacity-only, slow, and — per the
+ * accessibility requirement to respect motion preference — the
+ * `animation` declaration only exists inside the `no-preference` media
+ * query, so `.animate-flow-pulse` is inert (fully static) by default and
+ * only animates when the OS/browser has no reduced-motion preference set.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-flow-pulse {
+    animation: flow-pulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes flow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}

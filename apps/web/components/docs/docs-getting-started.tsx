@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DOC_SECTIONS } from "@/lib/docs";
+import { DocsVisualGuide } from "@/components/docs/docs-visual-guide";
 
 const HERO_HIGHLIGHTS = [
   {
@@ -37,7 +38,10 @@ const HERO_HIGHLIGHTS = [
  * real root README.md (tagline, intro paragraph, Status section, and
  * documentation table) as dedicated cards instead of raw markdown, since
  * that section reads as this page's index rather than a long-form doc.
- * Every other tab still renders its file through MarkdownContent unchanged.
+ * Between the hero and the Status card sits DocsVisualGuide, a visual
+ * "how it works" tour built from the same diagram primitives used on
+ * /architecture. Every other tab still renders its file through
+ * MarkdownContent unchanged.
  */
 export function DocsGettingStarted() {
   return (
@@ -91,6 +95,8 @@ export function DocsGettingStarted() {
           </div>
         </CardContent>
       </Card>
+
+      <DocsVisualGuide />
 
       <Card className="border-status-hit/20 bg-status-hit/5">
         <CardContent className="p-6">

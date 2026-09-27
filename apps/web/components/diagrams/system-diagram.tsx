@@ -17,19 +17,41 @@ const DATA_LAYER: {
   detail: string;
   icon: LucideIcon;
   tone: NodeTone;
+  title?: string;
 }[] = [
-  { label: "PostgreSQL", detail: "Data", icon: Database, tone: "postgres" },
-  { label: "Redis", detail: "Cache", icon: Database, tone: "redis" },
+  {
+    label: "PostgreSQL",
+    detail: "Data",
+    icon: Database,
+    tone: "postgres",
+    title: "Source of truth — Product data, request metrics",
+  },
+  {
+    label: "Redis",
+    detail: "Cache",
+    icon: Database,
+    tone: "redis",
+    title: "Cache-aside layer — TTL + invalidation, fail-open behavior",
+  },
 ];
 
-/** The top-level PROJECT_SPEC.md #6 architecture, adjusted to what actually exists: Next.js -> Fastify -> {Redis, PostgreSQL}, with the observability/benchmark pipeline living inside the API rather than as a separate box. `compact` drops the descriptive subtext for the hero placement; the Architecture page uses the full version. */
-export function SystemDiagram({ compact = false }: { compact?: boolean }) {
+/**
+ * The top-level PROJECT_SPEC.md #6 architecture, adjusted to what actually exists: Next.js -> Fastify -> {Redis, PostgreSQL}, with the observability/benchmark pipeline living inside the API rather than as a separate box. `compact` drops the descriptive subtext for the hero placement; the Architecture page uses the full version.
+ * `animated` adds a subtle, staggered opacity pulse along the arrows (docs page only) to suggest request flow direction — a no-op unless the OS/browser has no `prefers-reduced-motion` preference (see the `.animate-flow-pulse` rule in globals.css), so it never fights that setting.
+ */
+export function SystemDiagram({
+  compact = false,
+  animated = false,
+}: {
+  compact?: boolean;
+  animated?: boolean;
+}) {
   return (
     <div
       className={cn("flex flex-col items-center", compact ? "gap-2" : "gap-3")}
     >
       <Box icon={Monitor} label="Browser" compact={compact} />
-      <Arrow />
+      <Arrow animated={animated} delayMs={0} />
       <Box
         icon={Layers}
         label="Next.js"
@@ -37,7 +59,7 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
         tone="accent"
         compact={compact}
       />
-      <Arrow />
+      <Arrow animated={animated} delayMs={300} />
       <Box
         icon={Server}
         label="Fastify API"
@@ -55,14 +77,18 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
           className={cn(
             compact ? "size-3.5" : "size-4",
             "text-muted-foreground",
+            animated && "animate-flow-pulse",
           )}
+          style={animated ? { animationDelay: "600ms" } : undefined}
         />
         <ArrowDownRight
           aria-hidden="true"
           className={cn(
             compact ? "size-3.5" : "size-4",
             "text-muted-foreground",
+            animated && "animate-flow-pulse",
           )}
+          style={animated ? { animationDelay: "600ms" } : undefined}
         />
       </div>
       <div
@@ -71,7 +97,7 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
           compact ? "gap-3" : "gap-4",
         )}
       >
-        {DATA_LAYER.map(({ label, detail, icon, tone }) => (
+        {DATA_LAYER.map(({ label, detail, icon, tone, title }) => (
           <Box
             key={label}
             icon={icon}
@@ -79,6 +105,8 @@ export function SystemDiagram({ compact = false }: { compact?: boolean }) {
             detail={detail}
             tone={tone}
             compact={compact}
+            title={title}
+            pulse={animated && tone === "redis"}
           />
         ))}
       </div>
@@ -106,20 +134,28 @@ function Box({
   detail,
   tone = "neutral",
   compact = false,
+  title,
+  pulse = false,
 }: {
   icon: LucideIcon;
   label: string;
   detail?: string;
   tone?: NodeTone;
   compact?: boolean;
+  /** Native tooltip — supplementary only; the same fact is always visible in the section's "Technical details" disclosure, never hover-only. */
+  title?: string;
+  pulse?: boolean;
 }) {
   return (
     <div
+      title={title}
       className={cn(
         "flex flex-col items-center gap-1 rounded-lg border text-center",
         compact ? "px-3 py-2" : "px-5 py-3",
         TONE_BOX_CLASSES[tone],
+        pulse && "animate-flow-pulse",
       )}
+      style={pulse ? { animationDelay: "900ms" } : undefined}
     >
       <Icon
         aria-hidden="true"
@@ -138,8 +174,21 @@ function Box({
   );
 }
 
-function Arrow() {
+function Arrow({
+  animated = false,
+  delayMs = 0,
+}: {
+  animated?: boolean;
+  delayMs?: number;
+}) {
   return (
-    <ArrowDown aria-hidden="true" className="size-4 text-muted-foreground" />
+    <ArrowDown
+      aria-hidden="true"
+      className={cn(
+        "size-4 text-muted-foreground",
+        animated && "animate-flow-pulse",
+      )}
+      style={animated ? { animationDelay: `${delayMs}ms` } : undefined}
+    />
   );
 }
