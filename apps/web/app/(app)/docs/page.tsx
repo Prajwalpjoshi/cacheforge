@@ -44,7 +44,7 @@ export default async function DocsPage({
       ) : activeSlug === "architecture" ? (
         <DocsArchitecture />
       ) : activeSlug === "caching" ? (
-        <DocsCaching content={content} />
+        <DocsCaching />
       ) : activeSlug === "performance" ? (
         <DocsPerformance content={content} />
       ) : activeSlug === "decisions" ? (

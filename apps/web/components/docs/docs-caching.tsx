@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -11,7 +12,6 @@ import { WriteInvalidationDiagram } from "@/components/docs/write-invalidation-d
 import { RateLimitDiagram } from "@/components/docs/rate-limit-diagram";
 import { ResilienceDiagram } from "@/components/docs/resilience-diagram";
 import { TechnicalDetails } from "@/components/docs/technical-details";
-import { MarkdownContent } from "@/components/docs/markdown-content";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { describeCacheStatus } from "@/lib/status";
 
@@ -19,11 +19,11 @@ import { describeCacheStatus } from "@/lib/status";
  * A progressive read of docs/caching.md, following the same pattern as
  * DocsArchitecture: plain-English explanation and diagrams first — reusing
  * the same primitives already built for the Getting Started visual guide
- * and /architecture — then the full unedited markdown file as the source
- * of truth. Every fact (keys, TTLs, behavior) is drawn from
+ * and /architecture — then a concise summary in place of the full raw
+ * markdown file. Every fact (keys, TTLs, behavior) is drawn from
  * docs/caching.md; nothing here invents one.
  */
-export function DocsCaching({ content }: { content: string }) {
+export function DocsCaching() {
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -125,16 +125,150 @@ export function DocsCaching({ content }: { content: string }) {
           Full source-of-truth documentation
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Every fact above comes from this file — including the full cache
-          key table, pub/sub message shapes, and cache administration
-          endpoints.
+          A concise summary of every caching concept — the diagrams above are
+          the deep reference.
         </p>
       </div>
-      <Card>
-        <CardContent>
-          <MarkdownContent content={content} />
-        </CardContent>
-      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SourceSection
+          title="Definition"
+          items={[
+            <>
+              Stores frequently used data in{" "}
+              <strong className="text-foreground">Redis</strong> to make API
+              responses faster.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Why Cache-Aside?"
+          items={[
+            <>
+              Check <strong className="text-foreground">Redis first</strong>.
+            </>,
+            <>
+              If missing → get from{" "}
+              <strong className="text-foreground">PostgreSQL</strong> → store
+              in Redis.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Why Redis?"
+          items={[
+            <>Fast data access.</>,
+            <>
+              Supports{" "}
+              <strong className="text-foreground">
+                Cache, Rate Limiting, and Pub/Sub
+              </strong>
+              .
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Cache Key Design"
+          items={[
+            <>
+              Each cache has a unique <InlineCode>cacheforge:</InlineCode>{" "}
+              key.
+            </>,
+            <>Product and list data use different keys.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Why 60s / 30s TTL?"
+          items={[
+            <>
+              Product cache → <strong className="text-foreground">60 seconds</strong>
+            </>,
+            <>
+              List cache → <strong className="text-foreground">30 seconds</strong>
+            </>,
+            <>Old data expires automatically.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Why Tag-Based Invalidation?"
+          items={[
+            <>Clears related list caches when a product changes.</>,
+            <>
+              Avoids <InlineCode>KEYS</InlineCode>, which can slow Redis.
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          title="Rate Limiting"
+          items={[
+            <>Redis tracks API requests.</>,
+            <>Works across multiple API servers.</>,
+          ]}
+        />
+
+        <SourceSection
+          title="Pub/Sub"
+          items={[
+            <>
+              Sends{" "}
+              <strong className="text-foreground">
+                product update/delete events
+              </strong>
+              .
+            </>,
+          ]}
+        />
+
+        <SourceSection
+          className="md:col-span-2"
+          title="Cache Statistics"
+          items={[
+            <>
+              Tracks <strong className="text-foreground">cache hits and misses</strong>.
+            </>,
+          ]}
+        />
+      </div>
     </div>
+  );
+}
+
+function InlineCode({ children }: { children: ReactNode }) {
+  return (
+    <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[11px] text-foreground">
+      {children}
+    </code>
+  );
+}
+
+/** One card in the Caching tab's concise closing summary, replacing what used to be the full raw markdown file. */
+function SourceSection({
+  title,
+  items,
+  className,
+}: {
+  title: ReactNode;
+  items: ReactNode[];
+  className?: string;
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted">
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
