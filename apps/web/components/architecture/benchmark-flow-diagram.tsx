@@ -30,7 +30,10 @@ export function BenchmarkFlowDiagram() {
       />
 
       <div className="flex flex-col items-center gap-2">
-        <ArrowDown aria-hidden="true" className="size-4 text-muted-foreground" />
+        <ArrowDown
+          aria-hidden="true"
+          className="size-4 text-muted-foreground"
+        />
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
           {MODES.map((mode) => (
             <div
@@ -42,7 +45,10 @@ export function BenchmarkFlowDiagram() {
             </div>
           ))}
         </div>
-        <ArrowDown aria-hidden="true" className="size-4 text-muted-foreground" />
+        <ArrowDown
+          aria-hidden="true"
+          className="size-4 text-muted-foreground"
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
@@ -66,8 +72,8 @@ export function BenchmarkFlowDiagram() {
       </div>
 
       <p className="text-xs text-muted">
-        A failed run (invalid input, no products to target, Redis required
-        but unreachable) never creates a{" "}
+        A failed run (invalid input, no products to target, Redis required but
+        unreachable) never creates a{" "}
         <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[11px] text-foreground">
           BenchmarkRun
         </code>{" "}

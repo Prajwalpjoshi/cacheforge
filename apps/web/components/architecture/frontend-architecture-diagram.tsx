@@ -44,8 +44,8 @@ export function FrontendArchitectureDiagram() {
         <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[11px] text-foreground">
           lib/api/*.ts
         </code>{" "}
-        is the only code that talks to the Fastify API — every other
-        component reaches it only by importing from there.
+        is the only code that talks to the Fastify API — every other component
+        reaches it only by importing from there.
       </p>
     </div>
   );

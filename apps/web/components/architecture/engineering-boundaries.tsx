@@ -1,27 +1,27 @@
 const BOUNDARIES = [
   {
-    title: "Repository boundary",
-    detail: "Repositories are the only layer importing Prisma.",
+    title: "Repository",
+    detail: "Database access only.",
   },
   {
-    title: "Service boundary",
-    detail: "Services contain business logic and cache decisions.",
+    title: "Service",
+    detail: "Business logic.",
   },
   {
-    title: "Cache boundary",
-    detail: "cache-kit is framework-agnostic.",
+    title: "Cache",
+    detail: "Redis/caching behavior.",
   },
   {
-    title: "API boundary",
-    detail: "lib/api is the frontend API access layer.",
+    title: "Controller",
+    detail: "HTTP request/response translation.",
   },
   {
-    title: "Contract boundary",
-    detail: "Zod contracts are shared by API and web.",
+    title: "Contracts",
+    detail: "Shared API shapes.",
   },
   {
-    title: "Observability boundary",
-    detail: "request-context is the single request measurement point.",
+    title: "Observability",
+    detail: "Request measurement and metrics.",
   },
 ];
 

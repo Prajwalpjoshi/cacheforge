@@ -25,9 +25,7 @@ export function DataLayerDiagram() {
             <p className="font-mono text-sm font-semibold text-foreground">
               {model.name}
             </p>
-            <p className="mt-1 text-xs leading-5 text-muted">
-              {model.detail}
-            </p>
+            <p className="mt-1 text-xs leading-5 text-muted">{model.detail}</p>
           </div>
         ))}
       </div>

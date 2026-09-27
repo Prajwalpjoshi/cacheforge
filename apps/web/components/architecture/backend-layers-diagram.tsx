@@ -95,10 +95,7 @@ export function BackendLayersDiagram() {
             </span>
           </div>
           <div className="flex min-w-36 items-center justify-center gap-1.5 rounded-lg border border-status-down/30 bg-status-down/5 px-4 py-2.5">
-            <Database
-              aria-hidden="true"
-              className="size-4 text-status-down"
-            />
+            <Database aria-hidden="true" className="size-4 text-status-down" />
             <span className="font-mono text-sm font-semibold text-foreground">
               Redis
             </span>
