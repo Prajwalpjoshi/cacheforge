@@ -37,11 +37,21 @@ export const redisPlugin = fp(async (fastify: FastifyInstance) => {
     fastify.log.warn({ err: error }, "redis client error");
   });
 
-  try {
-    await client.connect();
-  } catch (error) {
+  // `connectTimeout` only bounds a single connection attempt; the
+  // reconnect strategy (left at its default) keeps retrying with backoff
+  // afterwards, so a fully unreachable Redis never actually rejects
+  // `connect()` — it just hangs. Racing it against this timeout is what
+  // makes startup itself fail open: we stop waiting and let the client
+  // keep retrying in the background (still logged via the "error"
+  // handler above), instead of blocking Fastify's boot indefinitely and
+  // tripping the plugin-startup timeout.
+  const connectOrWarn = client.connect().catch((error) => {
     fastify.log.warn({ err: error }, "failed to connect to redis at startup");
-  }
+  });
+  await Promise.race([
+    connectOrWarn,
+    new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+  ]);
 
   const onError: CacheErrorHandler = (error, context) => {
     fastify.log.warn(
