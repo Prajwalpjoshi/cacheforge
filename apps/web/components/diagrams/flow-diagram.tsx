@@ -33,17 +33,19 @@ export function FlowDiagram({
             <div
               role="listitem"
               className={cn(
-                "flex min-w-28 max-w-48 flex-col items-center gap-0.5 rounded-lg border px-4 py-3 text-center",
+                "flex min-w-0 max-w-48 flex-col items-center gap-0.5 rounded-lg border px-4 py-3 text-center sm:min-w-28",
                 tone === "accent"
                   ? "border-accent/30 bg-accent/5"
                   : "border-border bg-surface",
               )}
             >
-              <span className="font-mono text-sm font-semibold text-foreground">
+              <span className="break-words font-mono text-sm font-semibold text-foreground">
                 {step.label}
               </span>
               {step.detail && (
-                <span className="text-xs text-muted">{step.detail}</span>
+                <span className="break-words text-xs text-muted">
+                  {step.detail}
+                </span>
               )}
             </div>
             {index < steps.length - 1 && (

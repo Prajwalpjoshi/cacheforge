@@ -7,9 +7,9 @@ export function Term({
   definition: string;
 }) {
   return (
-    <p className="text-sm leading-6">
+    <span className="block text-sm leading-6">
       <strong className="font-semibold text-foreground">{word}</strong>
       <span className="text-muted"> — {definition}</span>
-    </p>
+    </span>
   );
 }

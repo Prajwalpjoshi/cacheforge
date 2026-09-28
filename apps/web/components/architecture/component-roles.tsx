@@ -51,12 +51,14 @@ export function ComponentRoles() {
       {ROLES.map((item) => (
         <div
           key={item.name}
-          className="rounded-lg border border-border bg-surface p-4"
+          className="min-w-0 rounded-lg border border-border bg-surface p-4"
         >
-          <h3 className="font-mono text-sm font-semibold text-accent">
+          <h3 className="break-words font-mono text-sm font-semibold text-accent">
             {item.name}
           </h3>
-          <p className="mt-1.5 text-sm leading-6 text-muted">{item.role}</p>
+          <p className="mt-1.5 break-words text-sm leading-6 text-muted">
+            {item.role}
+          </p>
         </div>
       ))}
     </div>

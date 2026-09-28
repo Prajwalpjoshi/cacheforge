@@ -1,4 +1,5 @@
 import { ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BranchOutcome {
   label: string;
@@ -17,30 +18,37 @@ export function BranchDiagram({
   outcomes: [BranchOutcome, BranchOutcome];
 }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="rounded-lg border border-border bg-surface px-4 py-2 font-mono text-sm font-semibold text-foreground">
+    <div className="flex w-full min-w-0 flex-col items-center gap-3">
+      <div className="max-w-full break-words rounded-lg border border-border bg-surface px-4 py-2 text-center font-mono text-sm font-semibold text-foreground">
         {entry}
       </div>
       <ArrowDown aria-hidden="true" className="size-4 text-muted-foreground" />
-      <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-2 font-mono text-sm font-semibold text-accent">
+      <div className="max-w-full break-words rounded-lg border border-accent/30 bg-accent/5 px-4 py-2 text-center font-mono text-sm font-semibold text-accent">
         {question}
       </div>
       <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
         {outcomes.map((outcome) => (
-          <div key={outcome.label} className="flex flex-col items-center gap-2">
+          <div
+            key={outcome.label}
+            className="flex min-w-0 flex-col items-center gap-2"
+          >
             <span
-              className={
+              className={cn(
+                "break-words font-mono text-xs font-semibold",
                 outcome.tone === "success"
-                  ? "font-mono text-xs font-semibold text-status-hit"
-                  : "font-mono text-xs font-semibold text-status-miss"
-              }
+                  ? "text-status-hit"
+                  : "text-status-miss",
+              )}
             >
               {outcome.label}
             </span>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex w-full min-w-0 flex-col items-center gap-1">
               {outcome.steps.map((step, index) => (
-                <div key={step} className="flex flex-col items-center gap-1">
-                  <div className="rounded-md border border-border bg-surface px-3 py-1.5 text-center font-mono text-xs text-foreground">
+                <div
+                  key={step}
+                  className="flex w-full min-w-0 flex-col items-center gap-1"
+                >
+                  <div className="max-w-full break-words rounded-md border border-border bg-surface px-3 py-1.5 text-center font-mono text-xs text-foreground">
                     {step}
                   </div>
                   {index < outcome.steps.length - 1 && (

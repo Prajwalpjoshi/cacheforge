@@ -150,7 +150,7 @@ function Box({
     <div
       title={title}
       className={cn(
-        "flex flex-col items-center gap-1 rounded-lg border text-center",
+        "flex max-w-64 min-w-0 flex-col items-center gap-1 rounded-lg border text-center",
         compact ? "px-3 py-2" : "px-5 py-3",
         TONE_BOX_CLASSES[tone],
         pulse && "animate-flow-pulse",
@@ -163,13 +163,15 @@ function Box({
       />
       <span
         className={cn(
-          "font-mono font-semibold text-foreground",
+          "break-words font-mono font-semibold text-foreground",
           compact ? "text-xs" : "text-sm",
         )}
       >
         {label}
       </span>
-      {detail && <span className="text-xs text-muted">{detail}</span>}
+      {detail && (
+        <span className="break-words text-xs text-muted">{detail}</span>
+      )}
     </div>
   );
 }
