@@ -71,7 +71,7 @@ flowchart TB
     subgraph Shell["components/app-shell/app-shell.tsx"]
         Sidebar["SidebarNav (desktop)"]
         Mobile["MobileNav drawer"]
-        Pill["SystemStatusPill\n(polls GET /api/health, 10s)"]
+        Pill["SystemStatusPill\n(polls GET /api/health, 60s)"]
     end
 
     AppGroup --> Shell

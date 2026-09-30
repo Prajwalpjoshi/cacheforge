@@ -465,7 +465,7 @@ The Performance Lab produces **real, locally reproducible measurements** — not
 | **Architecture** | Explain the system design | This spec's Mermaid diagram (rendered), stack table, links to `docs/*.md` | Static content from `docs/architecture.md` | none beyond scrolling | n/a | n/a | n/a |
 | **Documentation** | Deep technical explanation | Rendered `docs/caching.md`, `docs/performance.md`, `docs/decisions.md` | Static markdown | in-page nav / TOC | n/a | n/a | n/a |
 
-Data fetching throughout uses **TanStack Query** (polling intervals: 5s for dashboard/health, none for on-demand pages) so loading/error/stale states are consistent and don't need bespoke state machines per page.
+Data fetching throughout uses **TanStack Query** (polling intervals: 60s for the dashboard overview and health, 5s for the cache explorer, none for on-demand pages) so loading/error/stale states are consistent and don't need bespoke state machines per page. Dashboard data uses visibility-aware polling: while the dashboard is active, metrics refresh every 60 seconds; a background/hidden tab stops automatic polling and refreshes once when the user returns.
 
 ## 13. UI/UX Direction
 

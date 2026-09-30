@@ -103,10 +103,14 @@ itself.
 ## 12. Dashboard visualization
 
 The Overview Dashboard polls `GET /api/metrics/summary` and
-`GET /api/metrics/requests` every 5 seconds and renders real aggregates —
+`GET /api/metrics/requests` every 60 seconds and renders real aggregates —
 P50/P95/P99 latency, cache hit rate, error rate — computed live from that
 `RequestMetric` table by PostgreSQL itself (not pulled into JavaScript
 and reduced by hand). Nothing here is a fabricated demo number.
+
+Dashboard data uses visibility-aware polling. While the dashboard is
+active, metrics refresh every 60 seconds. Background/hidden tabs stop
+automatic polling and refresh once when the user returns.
 
 ## 13. Writing data invalidates the cache
 

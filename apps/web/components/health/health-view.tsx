@@ -15,7 +15,7 @@ import {
 } from "@/lib/status";
 
 export function HealthView() {
-  const query = useHealth(10_000);
+  const query = useHealth();
 
   const health = query.data?.data;
   const apiReachable = !query.isError;

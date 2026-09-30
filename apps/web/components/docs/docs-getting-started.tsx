@@ -162,13 +162,16 @@ export function DocsGettingStarted() {
               </p>
               <p className="text-sm leading-6 text-muted">
                 <strong className="text-foreground">
-                  No deployment has been performed
+                  Production deployment complete.
                 </strong>{" "}
-                — see{" "}
+                The API is deployed on Render, PostgreSQL is Neon, Redis is
+                Upstash, and the frontend is deployed on Netlify. The
+                production health endpoint is operational and reports both
+                PostgreSQL and Redis as up — see{" "}
                 <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-xs text-foreground">
                   DEPLOYMENT_READINESS.md
                 </code>{" "}
-                for the full checklist and verdict, and{" "}
+                for the pre-deployment checklist and verdict, and{" "}
                 <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-xs text-foreground">
                   docs/decisions.md
                 </code>{" "}

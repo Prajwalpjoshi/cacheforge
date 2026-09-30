@@ -159,9 +159,13 @@ cache-kit -> redis`, per PROJECT_SPEC.md §16).
   in development rather than rendering silently-wrong data. Errors are
   normalized once (`lib/api/error-message.ts`) into a message every
   page can show directly.
-- **TanStack Query** drives every data-fetching page: 5s polling for
-  the dashboard/cache explorer, 10s for health, on-demand (mutations)
-  for the Performance Lab and API Explorer. No page substitutes
+- **TanStack Query** drives every data-fetching page: 60s polling for
+  the dashboard overview and health, 5s for the cache explorer,
+  on-demand (mutations) for the Performance Lab and API Explorer.
+  Dashboard data uses visibility-aware polling: while the dashboard is
+  active, metrics refresh every 60 seconds; a background/hidden tab
+  stops automatic polling and refreshes once when the user returns. No
+  page substitutes
   fabricated data for a loading/empty/error state — see
   `packages/contracts`-typed empty states throughout
   `apps/web/components/*`.

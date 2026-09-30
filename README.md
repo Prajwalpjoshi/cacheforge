@@ -15,10 +15,13 @@ and the Performance Lab) built in Phases 1–5 has been audited for
 production readiness: real production builds, a real `node
 dist/server.js` + `next start` run, environment-variable inventory, a
 secret scan, and Redis/PostgreSQL failure injection against the
-production-mode servers. **No deployment has been performed** — see
-[`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md) for the full
-checklist and verdict, and `docs/decisions.md` for what changed and
-why during this phase.
+production-mode servers. **Production deployment complete.** The API
+is deployed on Render, PostgreSQL is Neon, Redis is Upstash, and the
+frontend is deployed on Netlify. The production health endpoint is
+operational and reports both PostgreSQL and Redis as up — see
+[`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md) for the
+pre-deployment checklist and verdict, and `docs/decisions.md` for what
+changed and why during this phase.
 
 See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) for the complete architecture,
 API specification, and phased implementation plan — it is the single
@@ -167,23 +170,33 @@ output-file tracer — see `docs/decisions.md`.
 
 - **API:** `pnpm --filter @cacheforge/api build && pnpm --filter @cacheforge/api start` runs the compiled `dist/server.js` with `NODE_ENV=production` set by the hosting platform. Verified locally by actually running this exact sequence — see `DEPLOYMENT_READINESS.md`.
 - **Web:** `pnpm --filter @cacheforge/web build && pnpm --filter @cacheforge/web start` runs `next start`. **`NEXT_PUBLIC_API_URL` must be set in the build environment**, not just at runtime — Next.js inlines `NEXT_PUBLIC_*` variables into the client bundle at build time, so setting it only when starting the server has no effect.
-- **CORS:** set the API's `CORS_ORIGIN` to the deployed frontend's exact origin (e.g. `https://cacheforge.vercel.app`) before any real traffic reaches it from that origin.
+- **CORS:** set the API's `CORS_ORIGIN` to the deployed frontend's exact origin (e.g. `https://cacheforge.netlify.app`) before any real traffic reaches it from that origin.
 
 ## Deployment architecture
 
-The target architecture this project is built for (PROJECT_SPEC.md
-§18) — **not yet deployed**:
+**Production (live):**
 
 ```
-apps/web   → Vercel (or any static/edge Next.js host)
-apps/api   → Render, or any host that can run `node dist/server.js`
-PostgreSQL → Neon, Render Postgres, or any reachable PostgreSQL 16+
-Redis      → Upstash, or any reachable Redis 7+ (optional at runtime)
+apps/web   → Netlify           https://cacheforge.netlify.app
+apps/api   → Render            https://cacheforge-api.onrender.com
+PostgreSQL → Neon
+Redis      → Upstash
 ```
 
-No cloud accounts, databases, or Redis instances have been created by
-this project. See `DEPLOYMENT_READINESS.md` for the full pre/during/
-after-deployment checklist and the current readiness verdict.
+The production health endpoint
+(`https://cacheforge-api.onrender.com/api/health`) reports:
+
+```json
+{ "status": "ok", "postgres": "up", "redis": "up" }
+```
+
+See `DEPLOYMENT_READINESS.md` for the pre-deployment checklist and
+verdict, and `docs/decisions.md` for what changed and why.
+
+For local development, see "Getting started" above — the app runs
+against Docker Compose's local PostgreSQL/Redis at
+`http://localhost:3000` / `http://localhost:4000`, independent of the
+production deployment above.
 
 ## Known limitations
 

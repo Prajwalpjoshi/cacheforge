@@ -1,13 +1,21 @@
 # CacheForge — Deployment Readiness
 
+> **Post-deployment update:** production deployment has since been
+> performed, using the providers this audit evaluated (API on Render,
+> PostgreSQL on Neon, Redis on Upstash, frontend on Netlify). See the
+> README's "Status" and "Deployment architecture" sections for the
+> current, live state. The audit below is left as originally written —
+> it documents the pre-deployment verification that was actually
+> performed, at the point in time before deployment.
+
 Produced during **Phase 6 (deployment readiness verification)**. This
-is a pre-deployment audit, not a deployment record — **no cloud
-infrastructure has been created and nothing has been deployed.** Every
-claim below was actually verified against a real, local build/run of
-the application (production builds, `node dist/server.js`, `next
-start`, and the local Docker PostgreSQL/Redis containers), not
-assumed. See the Phase 6 report (delivered alongside this file) for
-the full evidence trail.
+is a pre-deployment audit, not a deployment record — at the time it
+was written, no cloud infrastructure had been created and nothing had
+been deployed. Every claim below was actually verified against a real,
+local build/run of the application (production builds, `node
+dist/server.js`, `next start`, and the local Docker PostgreSQL/Redis
+containers), not assumed. See the Phase 6 report (delivered alongside
+this file) for the full evidence trail.
 
 ## Readiness classification
 

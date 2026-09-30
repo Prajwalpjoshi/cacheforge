@@ -469,9 +469,13 @@ export function DocsArchitecture() {
           <FrontendArchitectureDiagram />
           <TechnicalDetails>
             <p>
-              TanStack Query drives data fetching: 5s polling for the
-              dashboard/cache explorer, 10s for health, on-demand (mutations)
-              for the Performance Lab and API Explorer. Errors are normalized
+              TanStack Query drives data fetching: 60s polling for the
+              dashboard overview and health, 5s for the cache explorer,
+              on-demand (mutations) for the Performance Lab and API Explorer.
+              Dashboard data uses visibility-aware polling: while the
+              dashboard is active, metrics refresh every 60 seconds.
+              Background/hidden tabs stop automatic polling and refresh once
+              when the user returns. Errors are normalized
               once (
               <code className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[11px] text-foreground">
                 lib/api/error-message.ts
