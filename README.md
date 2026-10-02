@@ -7,18 +7,22 @@ a small product catalog API and uses it to demonstrate — with real
 measurements, not fabricated numbers — how a Redis cache-aside layer,
 rate limiting, and pub/sub actually behave in front of PostgreSQL.
 
-## Status
+## Production Status
 
-**Phase 6 — deployment readiness verification.** The full stack
-(Fastify API + Next.js frontend, real PostgreSQL/Redis, observability,
-and the Performance Lab) built in Phases 1–5 has been audited for
-production readiness: real production builds, a real `node
-dist/server.js` + `next start` run, environment-variable inventory, a
-secret scan, and Redis/PostgreSQL failure injection against the
-production-mode servers. **Production deployment complete.** The API
-is deployed on Render, PostgreSQL is Neon, Redis is Upstash, and the
-frontend is deployed on Netlify. The production health endpoint is
-operational and reports both PostgreSQL and Redis as up — see
+**Live and operational.**
+
+CacheForge is deployed as a production-style distributed caching and
+API performance platform.
+
+| Component | Production |
+|---|---|
+| Frontend | Netlify |
+| API | Render |
+| PostgreSQL | Neon |
+| Redis | Upstash |
+| Observability | Enabled |
+| Health checks | PostgreSQL + Redis |
+| Performance Lab | Available | — see
 [`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md) for the
 pre-deployment checklist and verdict, and `docs/decisions.md` for what
 changed and why during this phase.
