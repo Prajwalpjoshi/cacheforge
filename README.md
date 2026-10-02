@@ -22,7 +22,9 @@ API performance platform.
 | Redis | Upstash |
 | Observability | Enabled |
 | Health checks | PostgreSQL + Redis |
-| Performance Lab | Available | — see
+| Performance Lab | Available | 
+
+— see
 [`DEPLOYMENT_READINESS.md`](./DEPLOYMENT_READINESS.md) for the
 pre-deployment checklist and verdict, and `docs/decisions.md` for what
 changed and why during this phase.
